@@ -423,3 +423,16 @@ a.im-card:hover{border-color:#f5c518}
   .section.tight{padding-top:22px;padding-bottom:22px}
   .card{padding:18px 12px}
 }
+
+/* mobile: reclaim every pixel */
+@media (max-width:700px){
+  body{font-size:15px}
+  .pcard{padding:14px 12px;gap:12px;margin:12px 0 16px}
+  .pinfo{min-width:0}
+  .pinfo h2{font-size:24px}
+  .tag{font-size:10px}
+  .pavatar{width:72px;height:72px;margin:0 auto}
+  .pcard{flex-direction:column;text-align:center}
+  .pbadges{justify-content:center}
+  .back-link{font-size:12.5px}
+}
