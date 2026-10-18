@@ -95,7 +95,7 @@
     });
     if (!who) { root.innerHTML = '<div class="lb-loading">No player specified.</div>'; return; }
     if (!mine.length) {
-      root.innerHTML = '<div class="lb-loading">No recorded games found for <b>' + who + '</b>. <a href="league.html#ladder">Back to leaderboard</a></div>';
+      root.innerHTML = '<div class="lb-loading">No recorded games found for <b>' + who + '</b>. <a href="monday-ladder.html#ladder">Back to leaderboard</a></div>';
       return;
     }
 
@@ -177,7 +177,7 @@
     var first = mine[0].d, last = mine[mine.length - 1].d;
     function fd(d) { return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); }
 
-    var h = '<section class="section tight"><a class="back-link" href="league.html#ladder">← Back to leaderboard</a>' +
+    var h = '<section class="section tight"><a class="back-link" href="monday-ladder.html#ladder">← Back to leaderboard</a>' +
       '<div class="pcard">' +
       '<img class="pavatar" src="' + photoFor(who) + '" alt="' + name + '" onerror="this.src=\'https://ui-avatars.com/api/?background=b6e63e&color=060f24&size=160&format=svg&bold=true&name=' + encodeURIComponent(name) + '\'">' +
       '<div class="pinfo"><span class="tag">Sutton Shuttlers · League player</span>' +

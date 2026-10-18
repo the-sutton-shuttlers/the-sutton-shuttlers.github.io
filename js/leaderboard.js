@@ -72,6 +72,53 @@
     var tabs = [{ label: 'All time', all: true }].concat(seasons);
     var curIdx = tabs.length - 1; // default: most recent season
 
+    // --- club-level stats ---
+    (function () {
+      var csRoot = document.getElementById('club-stats-body');
+      if (csRoot) {
+        var dates = {}, players = {}, seasonCounts = {};
+        matches.forEach(function (m) {
+          dates[m.d.toDateString()] = 1;
+          m.teamA.concat(m.teamB).forEach(function (n) {
+            if (n && !/dummy|^player \d$/i.test(n)) players[n] = 1;
+          });
+          var y = m.d.getFullYear(), mo = m.d.getMonth();
+          var sk = (mo >= 8) ? y : y - 1;
+          seasonCounts[sk] = (seasonCounts[sk] || 0) + 1;
+        });
+        var nSessions = Object.keys(dates).length;
+        var nPlayers = Object.keys(players).length;
+        var first = lastDate, last = lastDate;
+        matches.forEach(function (m) { if (m.d < first) first = m.d; });
+        var fd = function (d) { return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
+        var h = '<div class="pstats">' +
+          '<div class="pstat"><b>' + matches.length + '</b><span>Games played</span></div>' +
+          '<div class="pstat"><b>' + nSessions + '</b><span>Monday nights</span></div>' +
+          '<div class="pstat"><b>' + nPlayers + '</b><span>Players</span></div>' +
+          '<div class="pstat"><b>' + (matches.length / Math.max(nSessions, 1)).toFixed(1) + '</b><span>Games / night</span></div>' +
+          '<div class="pstat"><b>' + seasons.length + '</b><span>Seasons</span></div>' +
+          '<div class="pstat"><b>' + fd(first) + '</b><span>First game</span></div>' +
+          '</div>' +
+          '<div class="cs-seasons">' +
+          Object.keys(seasonCounts).sort().map(function (k) {
+            return '<span class="pbadge">Sep ' + k + '–Aug ' + (+k + 1) + ': <b>' + seasonCounts[k] + '</b> games</span>';
+          }).join('') + '</div>' +
+          '<div class="psub" style="margin-top:8px">Latest scores: ' + fd(last) + '</div>';
+        csRoot.innerHTML = h;
+      }
+      var pgRoot = document.getElementById('players-grid');
+      if (pgRoot) {
+        var all = standing(tabs[0]);
+        var h2 = '<div class="players">';
+        all.forEach(function (s, i) {
+          h2 += '<a class="player ranked" href="player.html?n=' + encodeURIComponent(s.n) + '">' +
+            '<span class="prank">' + (i + 1) + '</span>' +
+            '<div><b>' + s.n + '</b><small>' + s.p + ' games · ' + Math.round(100 * s.winRate) + '% win</small></div></a>';
+        });
+        pgRoot.innerHTML = h2 + '</div>';
+      }
+    })();
+
     // Club ranking model (same as the 'ranking' tab):
     //   WinRateScore = winRate × (50 if played > 30% of max, else 30)
     //   VolumeScore  = log10(played) × 10

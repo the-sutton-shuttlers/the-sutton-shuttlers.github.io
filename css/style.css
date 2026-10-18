@@ -291,3 +291,8 @@ td .pill { background: rgba(56,198,244,.12); color: var(--teal); font-size: 12px
 .lb-link{color:#eaf0ff;font-weight:600}
 .lb-link:hover{color:#b6e63e}
 @media (max-width:700px){.pgrid{grid-template-columns:1fr}.pcard{padding:18px;gap:16px}.pavatar{width:88px;height:88px}.pstat b{font-size:20px}}
+
+/* Monday Ladder — club stats + ranked players */
+.cs-seasons{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+a.player{text-decoration:none;color:inherit}
+.player .prank{font-family:Oswald,sans-serif;font-weight:700;font-size:17px;color:#b6e63e;min-width:30px;text-align:center;flex-shrink:0}
