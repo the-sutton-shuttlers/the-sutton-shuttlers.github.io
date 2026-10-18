@@ -114,7 +114,7 @@
 
     // --- stats ---
     var st = { p: 0, w: 0, l: 0, wm: 0, lm: 0, c: [0, 0, 0, 0], pf: 0, pa: 0 };
-    var partners = {}, opponents = {}, form = [], byMonth = {}, seasons = {};
+    var partners = {}, opponents = {}, form = [], byMonth = {}, seasons = {}, recs = [];
     var maxpAll = 0;
     var counts = {};
     matches.forEach(function (m) { m.teamA.concat(m.teamB).forEach(function (n) { counts[n] = (counts[n] || 0) + 1; }); });
@@ -145,6 +145,9 @@
       if (m.court >= 1 && m.court <= 4) s.c[m.court - 1]++;
       team.forEach(function (n) { if (!samePlayer(n, who) && !/dummy/i.test(n)) { var o = partners[n] = partners[n] || { p: 0, w: 0 }; o.p++; if (won) o.w++; } });
       opp.forEach(function (n) { if (!/dummy/i.test(n)) { var o = opponents[n] = opponents[n] || { p: 0, w: 0 }; o.p++; if (won) o.w++; } });
+      recs.push({ d: m.d, won: won, diff: diff, pf: pf, pa: (inA ? m.sb : m.sa), court: m.court,
+        mate: team.filter(function (n) { return !samePlayer(n, who); }),
+        opp: opp });
     });
 
     // max played within each season + overall for the regular threshold
@@ -202,6 +205,7 @@
       '<div class="phero-stats">' +
       pstat(st.p, 'Matches') + pstat(st.w + '–' + st.l, 'W–L') + pstat(winRate + '%', 'Win rate') +
       pstat(avg, 'Avg score') + pstat(score.total.toFixed(1), 'Rank score') + pstat('+' + st.wm, 'Win margin') +
+      pstat(st.pf, 'Pts for') + pstat(st.pa, 'Pts against') +
       '</div></div></div>';
 
     // rank score breakdown bars
@@ -262,6 +266,108 @@
     });
     h += '</table></div><div class="chart-expl">Each season\'s Score uses the same RankScore formula (win rate + volume + margin + court strength) but computed only over that season\'s games — so it can be compared with the season tab on the leaderboard.</div></div>';
 
+
+    // ===== Highlights: streaks + biggest win / heaviest loss =====
+    var bw = null, bl = null;
+    recs.forEach(function (r) {
+      if (r.won && (!bw || r.diff > bw.diff)) bw = r;
+      if (!r.won && (!bl || r.diff < bl.diff)) bl = r;
+    });
+    var curW = 0, curL = 0;
+    for (var ci = recs.length - 1; ci >= 0; ci--) { if (recs[ci].won) curW++; else break; }
+    for (var cj = recs.length - 1; cj >= 0; cj--) { if (!recs[cj].won) curL++; else break; }
+    var longW = 0, longWend = null, run = 0, longL = 0, runL = 0;
+    recs.forEach(function (r) {
+      if (r.won) { run++; runL = 0; if (run > longW) { longW = run; longWend = r.d; } }
+      else { runL++; run = 0; if (runL > longL) longL = runL; }
+    });
+    h += '<div class="card pblock"><h3>🏸 Highlights</h3><div class="hl-grid">';
+    if (curW >= 2) h += '<div class="hl"><b>' + curW + 'W</b><span>current streak 🔥</span></div>';
+    if (curL >= 2) h += '<div class="hl"><b>' + curL + 'L</b><span>current streak — bounce back!</span></div>';
+    if (longW >= 3) h += '<div class="hl"><b>' + longW + 'W</b><span>best streak' + (longWend ? ' (to ' + fd(longWend) + ')' : '') + '</span></div>';
+    if (bw) h += '<div class="hl"><b>' + bw.pf + '–' + bw.pa + '</b><span>biggest win, ' + fd(bw.d) + '<br>vs ' + bw.opp.join(' &amp; ') + '</span></div>';
+    if (bl) h += '<div class="hl"><b>' + bl.pf + '–' + bl.pa + '</b><span>heaviest loss, ' + fd(bl.d) + '<br>vs ' + bl.opp.join(' &amp; ') + '</span></div>';
+    var close = recs.filter(function (r) { return r.won && r.diff <= 4; }).length;
+    if (close >= 3) h += '<div class="hl"><b>' + close + '</b><span>close wins (≤4 pts) — clutch player!</span></div>';
+    h += '</div></div>';
+
+    // ===== Head to head =====
+    var hfoes = Object.keys(opponents).map(function (n) { var o = opponents[n]; return { n: n, p: o.p }; })
+      .sort(function (a, b) { return b.p - a.p; });
+    if (hfoes.length) {
+      h += '<div class="card pblock"><h3>🏸 Head to head</h3>' +
+        '<select id="h2h-sel" class="h2h-sel">' +
+        '<option value="">Pick an opponent…</option>' +
+        hfoes.map(function (o) { return '<option value="' + o.n.replace(/"/g, '&quot;') + '">' + o.n + ' (' + o.p + ' games)</option>'; }).join('') +
+        '</select><div id="h2h-out"></div></div>';
+    }
+
+    // ===== Season trajectory =====
+    var traj = [];
+    sKeysAll.slice().reverse().forEach(function (k) {
+      var cnt = {}, mx2 = 0;
+      matches.forEach(function (m) {
+        if (seasonOf(m.d).key !== k) return;
+        var diff2 = m.sa - m.sb;
+        m.teamA.forEach(function (n) { bump2(n, m.aWin, diff2, m.court); });
+        m.teamB.forEach(function (n) { bump2(n, !m.aWin, -diff2, m.court); });
+      });
+      function bump2(n, won, dm, court) {
+        if (!n || /dummy/i.test(n)) return;
+        var o = cnt[n] = cnt[n] || { p: 0, w: 0, wm: 0, lm: 0, c: [0, 0, 0, 0] };
+        o.p++; if (court >= 1 && court <= 4) o.c[court - 1]++;
+        if (won) { o.w++; o.wm += dm; } else o.lm += dm;
+        if (o.p > mx2) mx2 = o.p;
+      }
+      var me = null; for (var n2 in cnt) if (samePlayer(n2, who)) me = cnt[n2];
+      if (!me) return;
+      var myS = scoreOf(me, mx2).total, rnk = 1, tot = 0;
+      for (var n3 in cnt) { tot++; if (scoreOf(cnt[n3], mx2).total > myS) rnk++; }
+      traj.push({ label: seasons[k].label.replace('Sep ', '').replace('Aug ', ''), r: rnk, t: tot });
+    });
+    if (traj.length) {
+      h += '<div class="card pblock"><h3>🏸 Ladder trajectory <span class="hsub">(rank per season)</span></h3><div class="traj">';
+      traj.forEach(function (t, i) {
+        h += '<div class="tstep"><b>#' + t.r + '</b><span>' + t.label + '</span>' +
+          (i < traj.length - 1 ? '<i class="tarrow">' + (traj[i + 1].r < t.r ? '↗' : (traj[i + 1].r > t.r ? '↘' : '→')) + '</i>' : '') + '</div>';
+      });
+      h += '</div><div class="chart-expl">Rank among everyone who played that season — ↗ climbing, ↘ slipping.</div></div>';
+    }
+
+    // ===== Partnership chemistry =====
+    var chem = Object.keys(partners).map(function (n) {
+      var o = partners[n];
+      var wo_p = 0, wo_w = 0;
+      recs.forEach(function (r) { if (!r.mate.some(function (x) { return x === n; })) { wo_p++; if (r.won) wo_w++; } });
+      return { n: n, p: o.p, w: o.w, wr: o.w / o.p, wo: wo_p ? wo_w / wo_p : null };
+    }).filter(function (o) { return o.p >= 5 && o.wo !== null; })
+      .sort(function (a, b) { return (b.wr - b.wo) - (a.wr - a.wo); }).slice(0, 5);
+    if (chem.length) {
+      h += '<div class="card pblock"><h3>🏸 Partnership chemistry <span class="hsub">(win % with vs without)</span></h3><table class="lb-table mini"><tr><th>Partner</th><th>Games</th><th>With</th><th>Without</th><th>Boost</th></tr>';
+      chem.forEach(function (o) {
+        var boost = o.wr - o.wo, cls = boost >= 0 ? 'pos' : 'neg';
+        h += '<tr><td>' + o.n + '</td><td>' + o.p + '</td><td>' + Math.round(100 * o.wr) + '%</td><td>' + Math.round(100 * o.wo) + '%</td><td class="' + cls + '">' + (boost >= 0 ? '+' : '') + Math.round(100 * boost) + '%</td></tr>';
+      });
+      h += '</table><div class="chart-expl">Positive boost = you win more with them on your side — pick them at rotation!</div></div>';
+    }
+
+    // ===== Milestones =====
+    var miles = [], g = 0, wC = 0, c1 = null;
+    var gMiles = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500], wMiles = [25, 50, 75, 100, 150, 200, 250, 300, 350, 400];
+    recs.forEach(function (r) {
+      g++; if (r.won) wC++;
+      if (gMiles.indexOf(g) >= 0) miles.push({ t: '🏅 ' + g + 'th game', d: r.d });
+      if (wMiles.indexOf(wC) >= 0) miles.push({ t: '🏆 ' + wC + 'th win', d: r.d });
+      if (!c1 && r.court === 1) c1 = r.d;
+    });
+    if (c1) miles.push({ t: '👑 First Court 1 game', d: c1 });
+    if (miles.length) {
+      miles.sort(function (a, b) { return a.d - b.d; });
+      h += '<div class="card pblock"><h3>🏸 Milestones</h3><div class="miles">';
+      miles.forEach(function (m2) { h += '<div class="mile"><b>' + m2.t + '</b><span>' + fd(m2.d) + '</span></div>'; });
+      h += '</div></div>';
+    }
+
     // partnerships + rivalries — ordered by win %, min 3 games
     function topOf(map) {
       return Object.keys(map).map(function (n) { var o = map[n]; return { n: n, p: o.p, w: o.w, wr: o.w / o.p }; })
@@ -294,6 +400,22 @@
 
     h += '<div class="lb-note">Stats are live from the club score sheet — they update as soon as new scores are entered.</div></section>';
     root.innerHTML = h;
+
+    var sel = document.getElementById('h2h-sel'), out = document.getElementById('h2h-out');
+    if (sel) sel.addEventListener('change', function () {
+      var foe = sel.value;
+      if (!foe) { out.innerHTML = ''; return; }
+      var vs = recs.filter(function (r) { return r.opp.indexOf(foe) >= 0; });
+      var w2 = vs.filter(function (r) { return r.won; }).length;
+      var last5 = vs.slice(-5).reverse();
+      var txt = '<div class="h2h-rec"><b>' + w2 + '–' + (vs.length - w2) + '</b> in ' + vs.length +
+        ' meetings (' + Math.round(100 * w2 / vs.length) + '% won)</div><div class="form-strip">';
+      last5.forEach(function (r) {
+        txt += '<span class="fchip ' + (r.won ? 'fw' : 'fl') + '" title="' + fd(r.d) + ' ' + r.pf + '–' + r.pa + '">' + (r.won ? 'W' : 'L') + '</span>';
+      });
+      txt += '</div><div class="psub">Last ' + last5.length + ' meetings, newest first</div>';
+      out.innerHTML = txt;
+    });
     document.title = name + ' | Sutton Shuttlers Badminton Club';
   }
 

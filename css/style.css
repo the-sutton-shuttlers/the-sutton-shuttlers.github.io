@@ -436,3 +436,24 @@ a.im-card:hover{border-color:#f5c518}
   .pbadges{justify-content:center}
   .back-link{font-size:12.5px}
 }
+
+/* profile v4: highlights, h2h, trajectory, chemistry, milestones */
+.hl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.hl{background:rgba(182,230,62,.08);border:1px solid rgba(182,230,62,.22);border-radius:10px;padding:10px;text-align:center}
+.hl b{display:block;font-size:17px;color:#b6e63e}
+.hl span{font-size:10.5px;color:#9fb0d8;line-height:1.35;display:block;margin-top:3px}
+.h2h-sel{width:100%;margin-bottom:10px}
+.h2h-rec{font-size:14px;color:#eaf0ff;margin-bottom:8px}
+.h2h-rec b{color:#b6e63e;font-size:18px}
+.traj{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tstep{display:flex;align-items:center;gap:6px}
+.tstep b{font-size:20px;color:#b6e63e}
+.tstep span{font-size:10.5px;color:#9fb0d8;max-width:64px;line-height:1.2}
+.tarrow{color:#f59e0b;font-size:16px;font-weight:700;margin-left:4px}
+td.pos{color:#b6e63e;font-weight:700}
+td.neg{color:#ff7a7a;font-weight:700}
+.miles{display:flex;flex-direction:column;gap:6px}
+.mile{display:flex;justify-content:space-between;align-items:center;background:rgba(56,198,244,.07);border:1px solid rgba(56,198,244,.2);border-radius:8px;padding:8px 12px;font-size:13px}
+.mile b{color:#eaf0ff}
+.mile span{color:#9fb0d8;font-size:11.5px}
+@media (max-width:700px){.hl-grid{grid-template-columns:1fr 1fr}.tstep b{font-size:16px}}
