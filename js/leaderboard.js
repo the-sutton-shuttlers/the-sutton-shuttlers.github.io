@@ -222,7 +222,7 @@
       if (st.length) {
         var top3 = st.slice(0, 3);
         h += '<div class="podium">';
-        var order = [1, 0, 2], medals = ['gold', 'silver', 'bronze'], gongs = ['🥈', '🥇', '🥉'];
+        var order = [1, 0, 2], medals = ['gold', 'silver', 'bronze'], gongs = ['🥇', '🥈', '🥉'];
         order.forEach(function (pos) {
           var s = top3[pos]; if (!s) return;
           h += '<a class="pod ' + medals[pos] + '" href="player.html?n=' + encodeURIComponent(s.n) + '">' +
