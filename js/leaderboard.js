@@ -127,7 +127,7 @@
         order.forEach(function (pos) {
           var s = top3[pos]; if (!s) return;
           h += '<div class="pod ' + medals[pos] + '"><div class="pod-rank">' + (pos + 1) + '</div>' +
-            '<div class="pod-name">' + s.n + '</div><div class="pod-pts">' + s.score.toFixed(1) + '</div>' +
+            '<div class="pod-name"><a class="lb-link" href="player.html?n=' + encodeURIComponent(s.n) + '">' + s.n + '</a></div><div class="pod-pts">' + s.score.toFixed(1) + '</div>' +
             '<div class="pod-sub">' + s.w + 'W · ' + Math.round(100 * s.winRate) + '%</div></div>';
         });
         h += '</div>';
@@ -135,7 +135,7 @@
         h += '<div class="lb-wrap"><table class="lb-table"><tr><th>#</th><th>Player</th><th>P</th><th>W</th><th>L</th><th>Win %</th><th>Score</th></tr>';
         st.forEach(function (s, i) {
           var cls = i < 3 ? ' class="top' + (i + 1) + '"' : '';
-          h += '<tr' + cls + '><td>' + (i + 1) + '</td><td>' + s.n + '</td><td>' + s.p + '</td><td>' + s.w +
+          h += '<tr' + cls + '><td>' + (i + 1) + '</td><td><a class="lb-link" href="player.html?n=' + encodeURIComponent(s.n) + '">' + s.n + '</a></td><td>' + s.p + '</td><td>' + s.w +
             '</td><td>' + s.l + '</td><td>' + Math.round(100 * s.winRate) + '%</td><td><b>' + s.score.toFixed(1) + '</b></td></tr>';
         });
         h += '</table></div>';
