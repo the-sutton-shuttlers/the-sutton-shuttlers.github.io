@@ -272,9 +272,64 @@
         b.addEventListener('click', function () { render(+b.dataset.i); });
       });
     }
+    // Last night recap — per-court cards: finishing order (wins, then head-to-head,
+    // then point difference — same tiebreaks as the rules) + all 9 games with scores.
+    function buildRecap() {
+      var rcRoot = document.getElementById('night-recap-body');
+      if (!rcRoot) return;
+      var night = matches.filter(function (m) { return m.d.getTime() === lastDate.getTime(); });
+      if (!night.length) { rcRoot.innerHTML = '<div class="lb-loading">No games recorded yet.</div>'; return; }
+      var courts = {};
+      night.forEach(function (m) { (courts[m.court] = courts[m.court] || []).push(m); });
+      var h = '<p class="lb-tag">Monday ' + fmt(lastDate) + ' — every game, every court.</p><div class="night-grid">';
+      Object.keys(courts).sort().forEach(function (ck) {
+        var games = courts[ck], stats = {}, h2h = {};
+        games.forEach(function (m) {
+          var diff = m.sa - m.sb;
+          m.teamA.forEach(function (n) {
+            if (!n || /dummy/i.test(n)) return;
+            var o = stats[n] = stats[n] || { p: 0, w: 0, diff: 0 };
+            o.p++; o.diff += diff; if (m.aWin) o.w++;
+            m.teamB.forEach(function (b) { if (!/dummy/i.test(b)) h2h[n + '|' + b] = (h2h[n + '|' + b] || 0) + (m.aWin ? 1 : -1); });
+          });
+          m.teamB.forEach(function (n) {
+            if (!n || /dummy/i.test(n)) return;
+            var o = stats[n] = stats[n] || { p: 0, w: 0, diff: 0 };
+            o.p++; o.diff -= diff; if (!m.aWin) o.w++;
+            m.teamA.forEach(function (a) { if (!/dummy/i.test(a)) h2h[n + '|' + a] = (h2h[n + '|' + a] || 0) + (m.aWin ? -1 : 1); });
+          });
+        });
+        var order = Object.keys(stats).sort(function (a, b) {
+          if (stats[b].w !== stats[a].w) return stats[b].w - stats[a].w;
+          var hh = h2h[a + '|' + b] || 0;
+          if (hh !== 0) return -hh;
+          return stats[b].diff - stats[a].diff || a.localeCompare(b);
+        });
+        h += '<div class="card nc-card"><h4>Court ' + ck + '</h4><div class="nc-ranks">';
+        order.forEach(function (n, i) {
+          var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '<span class="nc-pos">' + (i + 1) + '</span>';
+          h += '<a class="nc-rank' + (i === 0 ? ' top' : '') + '" href="player.html?n=' + encodeURIComponent(n) + '">' +
+            '<span class="nc-medal">' + medal + '</span><b>' + n + '</b>' +
+            '<span class="nc-res">' + stats[n].w + 'W–' + (stats[n].p - stats[n].w) + 'L · ' + (stats[n].diff >= 0 ? '+' : '') + stats[n].diff + '</span></a>';
+        });
+        h += '</div><div class="nc-games">';
+        games.forEach(function (m, gi) {
+          var wA = m.aWin ? ' w' : '', wB = m.aWin ? '' : ' w';
+          h += '<div class="nc-game"><span class="nc-num">' + (gi + 1) + '</span>' +
+            '<span class="nc-team' + wA + '">' + m.teamA.join(' &amp; ') + '</span>' +
+            '<span class="nc-score">' + m.sa + '–' + m.sb + '</span>' +
+            '<span class="nc-team' + wB + '">' + m.teamB.join(' &amp; ') + '</span></div>';
+        });
+        h += '</div></div>';
+      });
+      h += '</div><p class="lb-note">Finishing order: wins, then head-to-head, then point difference — same as the score sheet. Sit-out rows not shown.</p>';
+      rcRoot.innerHTML = h;
+    }
+
     loadPhotos(function () {
       buildStats();
       buildPlayers();
+      buildRecap();
       render(curIdx);
     });
   });
