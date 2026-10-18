@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         status.className = 'form-status ok';
         status.textContent = form.dataset.success || 'Thank you! We will be in touch shortly.';
         form.reset();
+        if (form.dataset.gform) localStorage.setItem('party2026-submitted', '1');
         form.querySelectorAll('[data-total]').forEach(t => t.textContent = '1');
         form.querySelectorAll('[data-total-veg]').forEach(t => t.textContent = '0');
       } catch {
@@ -58,9 +59,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Party form: live totals + veg-can't-exceed-group check
+  // Party form: live totals + veg-can't-exceed-group check + same-device duplicate guard
   const party = document.querySelector('form[data-gform]');
   if (party) {
+    const submittedKey = 'party2026-submitted';
+    if (localStorage.getItem(submittedKey)) {
+      const status = party.querySelector('.form-status');
+      status.className = 'form-status ok';
+      status.textContent = 'Looks like you already registered from this device. Need to change your booking? Message the committee via the contact form.';
+    }
     const groups = [['adults','adults-veg'],['kids','kids-veg'],['u5','u5-veg']];
     const recalc = () => {
       let total = 0, veg = 0;
