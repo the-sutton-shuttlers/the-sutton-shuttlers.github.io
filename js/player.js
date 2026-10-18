@@ -95,7 +95,7 @@
     });
     if (!who) { root.innerHTML = '<div class="lb-loading">No player specified.</div>'; return; }
     if (!mine.length) {
-      root.innerHTML = '<div class="lb-loading">No recorded games found for <b>' + who + '</b>. <a href="league.html#ladder">Back to leaderboard</a></div>';
+      root.innerHTML = '<div class="lb-loading">No recorded games found for <b>' + who + '</b> (rows=' + rows.length + ' matches=' + matches.length + '). <a href="league.html#ladder">Back to leaderboard</a></div>';
       return;
     }
 
