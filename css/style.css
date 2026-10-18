@@ -483,3 +483,9 @@ td.neg{color:#ff7a7a;font-weight:700}
   .card.pblock .lb-wrap{margin:0 -2px}
   .lb-table.mini{min-width:340px}
 }
+
+/* fix table overflow: mini tables may scroll inside card */
+.card .lb-wrap .lb-table{min-width:0}
+.card .lb-wrap .lb-table:not(.mini){min-width:420px}
+.pgrid>*{min-width:0}
+@media (max-width:700px){.lb-table.mini{min-width:300px}}
