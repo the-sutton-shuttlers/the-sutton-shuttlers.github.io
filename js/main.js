@@ -50,6 +50,32 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const status = form.querySelector('.form-status');
+
+      // Party form validation runs here, before any network call — a separate
+      // submit listener can't stop this handler once it has started.
+      if (form.dataset.gform) {
+        if (localStorage.getItem('party2026-submitted')) {
+          status.className = 'form-status ok';
+          status.textContent = 'Looks like you already registered from this device. Need to change your booking? Message the committee via the contact form.';
+          return;
+        }
+        const labels = { adults: 'Adults', kids: 'Children 5-11', u5: 'Children under 5' };
+        let bad = null, total = 0;
+        Object.keys(labels).forEach(g => {
+          const gn = +form.querySelector('#' + g).value || 0;
+          const vn = +form.querySelector('#' + g + '-veg').value || 0;
+          total += gn;
+          if (vn > gn) bad = labels[g];
+        });
+        if (bad || total < 1) {
+          status.className = 'form-status err';
+          status.textContent = bad
+            ? bad + ': the vegetarian count is more than the total guests — please correct the numbers.'
+            : 'Please add at least one guest.';
+          return;
+        }
+      }
+
       const email = form.dataset.formsubmit;
       const data = new FormData(form);
       const btn = form.querySelector('button[type=submit]');
@@ -125,24 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
       party.querySelectorAll('[data-total-veg]').forEach(t => t.textContent = veg);
     };
     party.addEventListener('input', recalc);
-    party.addEventListener('submit', e => {
-      const status = party.querySelector('.form-status');
-      const labels = { adults: 'Adults', kids: 'Children 5-11', u5: 'Children under 5' };
-      let bad = null;
-      groups.forEach(([g, v]) => {
-        const gn = +party.querySelector('#' + g).value || 0;
-        const vn = +party.querySelector('#' + v).value || 0;
-        if (vn > gn) bad = labels[g];
-      });
-      const total = ['adults','kids','u5'].reduce((s, id) => s + (+party.querySelector('#' + id).value || 0), 0);
-      if (bad || total < 1) {
-        e.preventDefault();
-        status.className = 'form-status err';
-        status.textContent = bad
-          ? bad + ': the vegetarian count is more than the total guests — please correct the numbers.'
-          : 'Please add at least one guest.';
-      }
-    });
     recalc();
   }
 });
