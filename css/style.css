@@ -338,3 +338,15 @@ a.pod{text-decoration:none;color:inherit}
 .pchart.dual .pcol .b2{background:linear-gradient(180deg,#f59e0b,#7c4a08)}
 .lg.teal{background:#f59e0b}
 .chart-expl{font-size:12.5px;color:#9fb0d8;margin-top:8px}
+
+/* compact podium + small caption */
+.chart-expl{font-size:11px}
+.pod{padding:12px 8px}
+.pod-medal{font-size:20px;margin-bottom:2px}
+.pod-photo{width:48px;height:48px;border-width:2px;margin-bottom:5px}
+.pod.gold .pod-photo{width:60px;height:60px}
+.pod-rank{font-size:20px}
+.pod-name{font-size:14px;margin:3px 0}
+.pod-pts{font-size:16px}
+.pod-sub{font-size:11px;margin-top:2px}
+@media (max-width:560px){.pod-photo{width:42px;height:42px}.pod.gold .pod-photo{width:52px;height:52px}.pod-medal{font-size:17px}.pod-name{font-size:12.5px}.pod-pts{font-size:14px}}
