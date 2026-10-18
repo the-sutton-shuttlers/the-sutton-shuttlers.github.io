@@ -13,7 +13,7 @@
       var out = [];
       if (r && r.table) {
         r.table.rows.forEach(function (rw) {
-          out.push((rw.c || []).map(function (c) { return c ? c.v : null; }));
+          out.push((rw.c || []).map(function (c) { return c ? { v: c.v, f: c.f } : null; }));
         });
       }
       cb(out);
@@ -35,7 +35,7 @@
     // --- photo + display name map from Ranking_ALL (cols: 21 name, 22 photo) ---
     var photos = {}, fullNames = {};
     rankRows.forEach(function (r) {
-      var n = (r[21] || '').toString().trim(), link = (r[22] || '').toString().trim();
+      var n = (r[21] && r[21].v || '').toString().trim(), link = (r[22] && r[22].v || '').toString().trim();
       if (!n || !link) return;
       photos[n.toLowerCase()] = link;
       var m = link.match(/[?&]name=([^&]+)/);
@@ -67,10 +67,11 @@
     }
     var matches = [], seen = {};
     rows.forEach(function (r) {
-      var v = function (i) { return r[i]; };
-      if (!v(0)) return;
-      var d = parseDate(v(0)); if (!d) return;
-      var key = v(0) + '|' + v(1) + '|' + v(2);
+      var v = function (i) { return r[i] && r[i].v != null ? r[i].v : ''; };
+      var f = function (i) { return r[i] && r[i].f != null ? r[i].f : v(i); };
+      if (!v(0) && !f(0)) return;
+      var d = parseDate(f(0)); if (!d) return;
+      var key = f(0) + '|' + v(1) + '|' + v(2);
       if (seen[key]) return; seen[key] = 1;
       var teamA = [v(3), v(4)].map(function (x) { return (x || '').toString().trim(); });
       var teamB = [v(5), v(6)].map(function (x) { return (x || '').toString().trim(); });
