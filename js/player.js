@@ -53,17 +53,20 @@
       var k = name.toLowerCase();
       if (photos[k]) return photos[k];
       var first = k.split(' ')[0];
-      for (var key in photos) if (key.split(' ')[0] === first) return photos[key];
+      var ph = unambiguous(photos, first); if (ph) return ph;
       return 'https://ui-avatars.com/api/?background=b6e63e&color=060f24&size=160&format=svg&bold=true&name=' + encodeURIComponent(name);
+    }
+    function unambiguous(map, first) {
+      var hit = null, n = 0;
+      for (var key in map) if (key.split(' ')[0] === first) { n++; hit = map[key]; }
+      return n === 1 ? hit : null;
     }
     function displayName(name) {
       var k = name.toLowerCase();
       if (rankFull[k]) return rankFull[k];
       if (fullNames[k]) return fullNames[k];
       var first = k.split(' ')[0];
-      for (var key in rankFull) if (key.split(' ')[0] === first) return rankFull[key];
-      for (var key in fullNames) if (key.split(' ')[0] === first) return fullNames[key];
-      return name;
+      return unambiguous(rankFull, first) || unambiguous(fullNames, first) || name;
     }
 
     // --- parse score rows ---

@@ -23,19 +23,21 @@
 
   // Photo + full-name map from the Ranking_ALL tab (cols 21 name, 22 photo link)
   var photos = {}, fullNames = {};
+  function unambiguous(map, first) {
+    var hit = null, n = 0;
+    for (var key in map) if (key.split(' ')[0] === first) { n++; hit = map[key]; }
+    return n === 1 ? hit : null;
+  }
   function photoFor(name) {
     var k = (name || '').toLowerCase();
     if (photos[k]) return photos[k];
     var first = k.split(' ')[0];
-    for (var key in photos) if (key.split(' ')[0] === first) return photos[key];
+    var ph = unambiguous(photos, first); if (ph) return ph;
     return 'https://ui-avatars.com/api/?background=b6e63e&color=060f24&size=100&format=svg&bold=true&name=' + encodeURIComponent(name || '');
   }
   function displayName(name) {
     var k = (name || '').toLowerCase();
-    if (fullNames[k]) return fullNames[k];
-    var first = k.split(' ')[0];
-    for (var key in fullNames) if (key.split(' ')[0] === first) return fullNames[key];
-    return name;
+    return fullNames[k] || name;
   }
   function loadPhotos(cb) {
     loadTab('Ranking_ALL', function (res) {
@@ -153,7 +155,7 @@
         h += '<a class="im-card" href="player.html?n=' + encodeURIComponent(best) + '">' +
           '<img class="im-photo" src="' + photoFor(best) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
           '<div><span class="im-season">Sep ' + k + ' – Aug ' + (+k + 1) + '</span>' +
-          '<b>' + displayName(best) + '</b><span class="im-games">' + bestN + ' games played</span></div></a>';
+          '<b>' + best + '</b><span class="im-games">' + bestN + ' games played</span></div></a>';
       });
       h += '</div><div class="chart-expl">Turning up counts more than winning — these players showed up the most.</div></div>';
       // activity chart — games per month
@@ -184,7 +186,7 @@
         h += '<a class="player ranked" href="player.html?n=' + encodeURIComponent(s.n) + '">' +
           '<span class="prank">' + (i + 1) + '</span>' +
           '<img class="pthumb" src="' + photoFor(s.n) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
-          '<div><b>' + displayName(s.n) + '</b><small>' + s.p + ' games · ' + s.w + ' wins · ' + Math.round(100 * s.winRate) + '%</small></div></a>';
+          '<div><b>' + s.n + '</b><small>' + s.p + ' games · ' + s.w + ' wins · ' + Math.round(100 * s.winRate) + '%</small></div></a>';
       });
       pgRoot.innerHTML = h + '</div>';
     }
@@ -247,9 +249,9 @@
           var s = top3[pos]; if (!s) return;
           h += '<a class="pod ' + medals[pos] + '" href="player.html?n=' + encodeURIComponent(s.n) + '">' +
             '<div class="pod-medal">' + gongs[pos] + '</div>' +
-            '<img class="pod-photo" src="' + photoFor(s.n) + '" alt="' + displayName(s.n) + '" onerror="this.style.display=\'none\'">' +
+            '<img class="pod-photo" src="' + photoFor(s.n) + '" alt="' + s.n + '" onerror="this.style.display=\'none\'">' +
             '<div class="pod-rank">' + (pos + 1) + '</div>' +
-            '<div class="pod-name">' + displayName(s.n) + '</div><div class="pod-pts">' + s.score.toFixed(1) + '</div>' +
+            '<div class="pod-name">' + s.n + '</div><div class="pod-pts">' + s.score.toFixed(1) + '</div>' +
             '<div class="pod-sub">' + s.w + 'W · ' + Math.round(100 * s.winRate) + '%</div></a>';
         });
         h += '</div>';
@@ -257,7 +259,7 @@
         h += '<div class="lb-wrap lb-scroll"><table class="lb-table"><tr><th>#</th><th>Player</th><th>P</th><th>W</th><th>L</th><th>Win %</th><th>Score</th></tr>';
         st.forEach(function (s, i) {
           var cls = i < 3 ? ' class="top' + (i + 1) + '"' : '';
-          h += '<tr' + cls + '><td>' + (i + 1) + '</td><td><a class="lb-link" href="player.html?n=' + encodeURIComponent(s.n) + '">' + displayName(s.n) + '</a></td><td>' + s.p + '</td><td>' + s.w +
+          h += '<tr' + cls + '><td>' + (i + 1) + '</td><td><a class="lb-link" href="player.html?n=' + encodeURIComponent(s.n) + '">' + s.n + '</a></td><td>' + s.p + '</td><td>' + s.w +
             '</td><td>' + s.l + '</td><td>' + Math.round(100 * s.winRate) + '%</td><td><b>' + s.score.toFixed(1) + '</b></td></tr>';
         });
         h += '</table></div>';
