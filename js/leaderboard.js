@@ -148,7 +148,7 @@
       var mks = Object.keys(byMonth).sort();
       var mmax = Math.max.apply(null, mks.map(function (k) { return byMonth[k]; }));
       h += '<div class="card pblock"><h3>Club activity — per month</h3>' +
-        '<div class="chart-legend"><span><i class="lg lime"></i>Games played</span><span><i class="lg teal"></i>Players on court</span></div>' +
+        '<div class="chart-legend"><span><i class="lg lime"></i>Games played that month</span><span><i class="lg teal"></i>Different players who turned up</span></div>' +
         '<div class="pchart dual">';
       var pmax = Math.max.apply(null, mks.map(function (k) { return Object.keys(monthPlayers[k] || {}).length; }));
       mks.forEach(function (k) {
@@ -159,7 +159,7 @@
           '<i class="b1" style="height:' + Math.max(4, pc) + '%"></i><i class="b2" style="height:' + Math.max(4, pp) + '%"></i>' +
           '<span>' + k.slice(5) + '/' + k.slice(2, 4) + '</span></div>';
       });
-      h += '</div></div>';
+      h += '</div><div class="chart-expl">Each month shows two bars side by side: <b style="color:#b6e63e">lime</b> = total games played across all courts, <b style="color:#f59e0b">amber</b> = how many different players appeared that month. Hover a column for exact numbers.</div></div>';
       csRoot.innerHTML = h;
     }
 
