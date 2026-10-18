@@ -25,13 +25,15 @@
   }
 
   fetchTab('Ranking_ALL', function (rankRows) {
-    fetchTab('4. Score Table', function (scoreRows) {
-      if (!scoreRows) { root.innerHTML = '<div class="lb-loading">Could not load stats right now — try again later.</div>'; return; }
-      build(rankRows || [], scoreRows);
+    fetchTab('Ranking', function (nameRows) {
+      fetchTab('4. Score Table', function (scoreRows) {
+        if (!scoreRows) { root.innerHTML = '<div class="lb-loading">Could not load stats right now — try again later.</div>'; return; }
+        build(rankRows || [], nameRows || [], scoreRows);
+      });
     });
   });
 
-  function build(rankRows, rows) {
+  function build(rankRows, nameRows, rows) {
     // --- photo + display name map from Ranking_ALL (cols: 21 name, 22 photo) ---
     var photos = {}, fullNames = {};
     rankRows.forEach(function (r) {
@@ -40,6 +42,12 @@
       photos[n.toLowerCase()] = link;
       var m = link.match(/[?&]name=([^&]+)/);
       if (m) fullNames[n.toLowerCase()] = decodeURIComponent(m[1].replace(/\+/g, ' '));
+    });
+    var rankFull = {};
+    nameRows.forEach(function (r) {
+      var full = (r[1] && r[1].v || '').toString().trim(), short = (r[2] && r[2].v || '').toString().trim();
+      if (!full || !short) return;
+      rankFull[short.toLowerCase()] = full; rankFull[full.toLowerCase()] = full;
     });
     function photoFor(name) {
       var k = name.toLowerCase();
@@ -50,8 +58,10 @@
     }
     function displayName(name) {
       var k = name.toLowerCase();
+      if (rankFull[k]) return rankFull[k];
       if (fullNames[k]) return fullNames[k];
       var first = k.split(' ')[0];
+      for (var key in rankFull) if (key.split(' ')[0] === first) return rankFull[key];
       for (var key in fullNames) if (key.split(' ')[0] === first) return fullNames[key];
       return name;
     }
@@ -124,7 +134,8 @@
       if (won) { st.w++; st.wm += diff; } else { st.l++; st.lm += diff; }
       form.push(won ? 'W' : 'L');
       var mk = m.d.getFullYear() + '-' + ('0' + (m.d.getMonth() + 1)).slice(-2);
-      byMonth[mk] = (byMonth[mk] || 0) + 1;
+      var mm = byMonth[mk] = byMonth[mk] || { p: 0, w: 0 };
+      mm.p++; if (won) mm.w++;
       var sKey = seasonOf(m.d).key;
       var s = seasons[sKey] = seasons[sKey] || { label: seasonOf(m.d).label, p: 0, w: 0, l: 0, wm: 0, lm: 0, c: [0, 0, 0, 0] };
       s.p++; if (won) { s.w++; s.wm += diff; } else { s.l++; s.lm += diff; }
@@ -198,10 +209,19 @@
       var pct = Math.round(100 * Math.abs(x[1]) / Math.max(mx, 20));
       h += '<div class="pbar-row"><span>' + x[0] + '</span><div class="pbar"><i style="width:' + pct + '%"></i></div><b>' + x[1].toFixed(1) + '</b></div>';
     });
+    h += '<div class="pbar-row total"><span>Total</span><div class="pbar"><i style="width:100%"></i></div><b>' + score.total.toFixed(1) + '</b></div>';
     h += '<div class="chart-expl">RankScore (the club\'s official ranking formula) = WinRateScore + VolumeScore + MarginScore + CourtScore. Win rate rewards consistency, volume rewards turning up, margin rewards winning big, court rewards playing on the higher courts (Court 1 counts most).</div></div>';
 
     // recent form — full-width strip of all games, latest first
-    h += '<div class="card pblock"><h3>🏸 Recent form</h3><div class="form-strip wide">';
+    var motiv;
+    if (!st.p) motiv = '';
+    else if (st.w === st.p) motiv = 'Flawless — every single game a win. Unreal! 🏸🔥';
+    else if (winRate >= 66) motiv = 'Outstanding — you win about 2 of every 3 games! 🔥';
+    else if (winRate >= 50) motiv = 'You win more than half your games — keep the pressure on! 💪';
+    else if (winRate >= 33) motiv = 'Roughly every third game is yours — momentum is building, keep going! 🏸';
+    else if (st.w > 0) motiv = 'Every game on court makes you sharper — the wins are coming! 🏸';
+    else motiv = 'Tough run — but showing up is the first step. Your first win is close! 🏸';
+    h += '<div class="card pblock"><h3>🏸 Recent form <span class="hsub">(latest on the left)</span></h3><div class="motiv">' + motiv + '</div><div class="form-strip wide">';
     form.slice().reverse().forEach(function (r) { h += '<span class="fchip ' + (r === 'W' ? 'fw' : 'fl') + '">' + r + '</span>'; });
     h += '</div><div class="psub">All ' + form.length + ' games, newest first — scroll sideways</div></div>';
 
@@ -217,11 +237,15 @@
 
     // activity chart (games per month, CSS bars with counts)
     var mks = Object.keys(byMonth).sort();
-    var mmax = Math.max.apply(null, mks.map(function (k) { return byMonth[k]; }));
-    h += '<div class="card pblock"><h3>🏸 Activity — games per month</h3><div class="pchart">';
+    var mmax = Math.max.apply(null, mks.map(function (k) { return byMonth[k].p; }));
+    h += '<div class="card pblock"><h3>🏸 Activity — games per month <span class="hsub">(green = wins, grey = losses)</span></h3><div class="pchart">';
     mks.forEach(function (k) {
-      var pc = Math.round(100 * byMonth[k] / mmax);
-      h += '<div class="pcol" title="' + k + ': ' + byMonth[k] + ' games"><em>' + byMonth[k] + '</em><i style="height:' + Math.max(4, pc) + '%"></i><span>' + k.slice(5) + '/' + k.slice(2, 4) + '</span></div>';
+      var gp = byMonth[k].p, gw = byMonth[k].w, gl = gp - gw;
+      var pc = Math.round(100 * gp / mmax);
+      var lp = Math.round(100 * gl / gp), wp = 100 - lp;
+      h += '<div class="pcol" title="' + k + ': ' + gp + ' games (' + gw + 'W-' + gl + 'L)"><em>' + gp + '</em><i class="wl" style="height:' + Math.max(4, pc) + '%">' +
+        (gl ? '<b class="seg l" style="height:' + lp + '%">' + (gl >= 2 ? gl : '') + '</b>' : '') +
+        '<b class="seg w" style="height:' + (gl ? wp : 100) + '%">' + (gw >= 2 ? gw : '') + '</b></i><span>' + k.slice(5) + '/' + k.slice(2, 4) + '</span></div>';
     });
     h += '</div></div>';
 
