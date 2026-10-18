@@ -9,7 +9,15 @@
   var who = new URLSearchParams(location.search).get('n') || '';
 
   function fetchTab(sheetName, cb) {
-    window.google = { visualization: { Query: { setResponse: function (r) { cb(r && r.table ? r.table.rows.map(function (rw) { return (rw.c || []).map(function (c) { return c ? c.v : null; }); })); } } } };
+    window.google = { visualization: { Query: { setResponse: function (r) {
+      var out = [];
+      if (r && r.table) {
+        r.table.rows.forEach(function (rw) {
+          out.push((rw.c || []).map(function (c) { return c ? c.v : null; }));
+        });
+      }
+      cb(out);
+    } } } };
     var s = document.createElement('script');
     s.src = 'https://docs.google.com/spreadsheets/d/' + SHEET + '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(sheetName);
     s.onerror = function () { cb(null); };
