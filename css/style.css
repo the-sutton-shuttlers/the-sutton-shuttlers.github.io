@@ -415,3 +415,11 @@ a.im-card:hover{border-color:#f5c518}
   .pbadge{font-size:11px}
   .pchart .pcol span{font-size:9px}
 }
+
+/* full-width mobile sections */
+@media (max-width:700px){
+  .section,.section.tight{padding-left:10px;padding-right:10px}
+  .section{padding-top:40px;padding-bottom:40px}
+  .section.tight{padding-top:22px;padding-bottom:22px}
+  .card{padding:18px 12px}
+}

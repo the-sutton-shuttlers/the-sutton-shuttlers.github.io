@@ -106,7 +106,7 @@
       seasons.push({ label: 'Sep ' + y + ' – Aug ' + (y + 1), from: new Date(y, 8, 1), to: new Date(y + 1, 8, 1) });
     }
     var tabs = [{ label: 'All time', all: true }].concat(seasons);
-    var curIdx = tabs.length - 1; // default: most recent season
+    var curIdx = 0; // default: all time
 
     function seasonKey(d) { var y = d.getFullYear(), mo = d.getMonth(); return (mo >= 8) ? y : y - 1; }
 
