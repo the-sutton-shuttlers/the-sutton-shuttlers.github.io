@@ -390,3 +390,12 @@ a.im-card:hover{border-color:#f5c518}
 .insight{font-size:13.5px;color:#cfd9f0;background:rgba(56,198,244,.08);border:1px solid rgba(56,198,244,.25);border-radius:12px;padding:12px 16px;margin-bottom:16px;line-height:1.6}
 .insight b{color:#eaf0ff}
 @media (max-width:700px){.phero-stats{grid-template-columns:repeat(3,1fr)}}
+
+/* profile v3 */
+.pbar-row.total{border-top:1px solid rgba(182,230,62,.35);padding-top:8px;margin-top:4px}
+.pbar-row.total span,.pbar-row.total b{color:#b6e63e;font-weight:700}
+.motiv{font-size:13px;color:#eaf0ff;background:rgba(182,230,62,.10);border:1px solid rgba(182,230,62,.3);border-radius:10px;padding:8px 12px;margin-bottom:10px}
+.pchart .pcol i.wl{display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;background:transparent;width:100%}
+.pchart .pcol i.wl .seg{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;min-height:0}
+.pchart .pcol i.wl .seg.w{background:#b6e63e;color:#060f24;border-radius:4px 4px 0 0}
+.pchart .pcol i.wl .seg.l{background:#3b4a6b;color:#aab8d8}
