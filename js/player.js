@@ -270,5 +270,5 @@
     document.title = name + ' | Sutton Shuttlers Badminton Club';
   }
 
-  function stat(v, l) { return '<div class="pstat"><b>' + v + '</b><span>' + l + '</span></div>'; }
+  function stat(v,l){return pstat(v,l)} function pstat(v, l) { return '<div class="pstat"><b>' + v + '</b><span>' + l + '</span></div>'; }
 })();
