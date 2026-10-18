@@ -51,7 +51,7 @@
       else if (pb === '10' || pb === 10) aWin = false;
       else if (!isNaN(sa) && !isNaN(sb) && sa !== sb) aWin = sa > sb;
       if (aWin === null) return;
-      matches.push({ d: d, teamA: teamA, teamB: teamB, aWin: aWin });
+      matches.push({ d: d, court: +v(1) || 0, teamA: teamA, teamB: teamB, aWin: aWin, sa: sa, sb: sb });
       if (!lastDate || d > lastDate) lastDate = d;
     });
     if (!matches.length) {
@@ -72,22 +72,39 @@
     var tabs = [{ label: 'All time', all: true }].concat(seasons);
     var curIdx = tabs.length - 1; // default: most recent season
 
+    // Club ranking model (same as the 'ranking' tab):
+    //   WinRateScore = winRate × (50 if played > 30% of max, else 30)
+    //   VolumeScore  = log10(played) × 10
+    //   MarginScore  = (wonMargin + lostMargin) / played × 2
+    //   CourtScore   = (C1×25 + C2×15 + C3×10 + C4×5) / played
+    //   RankScore    = sum of the four
     function standing(season) {
       var p = {};
-      function bump(name, played, won) {
+      function bump(name, court, won, margin) {
         if (!name || /dummy/i.test(name)) return;
-        var o = p[name] = p[name] || { n: name, p: 0, w: 0, l: 0, pts: 0, pf: 0, pa: 0 };
-        if (!played) return;
-        o.p++; if (won) { o.w++; o.pts += 10; } else o.l++;
+        var o = p[name] = p[name] || { n: name, p: 0, w: 0, l: 0, wm: 0, lm: 0, c: [0, 0, 0, 0] };
+        o.p++;
+        if (court >= 1 && court <= 4) o.c[court - 1]++;
+        if (won) { o.w++; o.wm += margin; } else { o.l++; o.lm += margin; }
       }
       matches.forEach(function (m) {
         if (!season.all && (m.d < season.from || m.d >= season.to)) return;
-        m.teamA.forEach(function (n) { bump(n, true, m.aWin); });
-        m.teamB.forEach(function (n) { bump(n, true, !m.aWin); });
+        var diff = m.sa - m.sb;
+        m.teamA.forEach(function (n) { bump(n, m.court, m.aWin, diff); });
+        m.teamB.forEach(function (n) { bump(n, m.court, !m.aWin, -diff); });
       });
       var arr = Object.keys(p).map(function (k) { return p[k]; });
+      var maxp = Math.max.apply(null, arr.map(function (o) { return o.p; }).concat([1]));
+      arr.forEach(function (o) {
+        o.winRate = o.w / o.p;
+        o.wr = o.winRate * (o.p > maxp * 0.3 ? 50 : 30);
+        o.vs = Math.log10(o.p) * 10;
+        o.ms = ((o.wm + o.lm) / o.p) * 2;
+        o.cs = (o.c[0] * 25 + o.c[1] * 15 + o.c[2] * 10 + o.c[3] * 5) / o.p;
+        o.score = o.wr + o.vs + o.ms + o.cs;
+      });
       arr.sort(function (a, b) {
-        return b.pts - a.pts || (b.w / b.p) - (a.w / a.p) || b.p - a.p || a.n.localeCompare(b.n);
+        return b.score - a.score || b.winRate - a.winRate || b.p - a.p || a.n.localeCompare(b.n);
       });
       return arr;
     }
@@ -110,19 +127,19 @@
         order.forEach(function (pos) {
           var s = top3[pos]; if (!s) return;
           h += '<div class="pod ' + medals[pos] + '"><div class="pod-rank">' + (pos + 1) + '</div>' +
-            '<div class="pod-name">' + s.n + '</div><div class="pod-pts">' + s.pts + ' pts</div>' +
-            '<div class="pod-sub">' + s.w + 'W · ' + Math.round(100 * s.w / s.p) + '%</div></div>';
+            '<div class="pod-name">' + s.n + '</div><div class="pod-pts">' + s.score.toFixed(1) + '</div>' +
+            '<div class="pod-sub">' + s.w + 'W · ' + Math.round(100 * s.winRate) + '%</div></div>';
         });
         h += '</div>';
 
-        h += '<div class="lb-wrap"><table class="lb-table"><tr><th>#</th><th>Player</th><th>P</th><th>W</th><th>L</th><th>Win %</th><th>Pts</th></tr>';
+        h += '<div class="lb-wrap"><table class="lb-table"><tr><th>#</th><th>Player</th><th>P</th><th>W</th><th>L</th><th>Win %</th><th>Score</th></tr>';
         st.forEach(function (s, i) {
           var cls = i < 3 ? ' class="top' + (i + 1) + '"' : '';
           h += '<tr' + cls + '><td>' + (i + 1) + '</td><td>' + s.n + '</td><td>' + s.p + '</td><td>' + s.w +
-            '</td><td>' + s.l + '</td><td>' + Math.round(100 * s.w / s.p) + '%</td><td><b>' + s.pts + '</b></td></tr>';
+            '</td><td>' + s.l + '</td><td>' + Math.round(100 * s.winRate) + '%</td><td><b>' + s.score.toFixed(1) + '</b></td></tr>';
         });
         h += '</table></div>';
-        h += '<div class="lb-note">Win = 10 pts · minimum 1 game · ' + season.label + (season.all ? '' : ' season') + '</div>';
+        h += '<div class="lb-note">Rank = win-rate, volume, win margin &amp; court strength — same formula as the club sheet · ' + season.label + (season.all ? '' : ' season') + '</div>';
       } else {
         h += '<div class="lb-loading">No games recorded in this season yet.</div>';
       }
