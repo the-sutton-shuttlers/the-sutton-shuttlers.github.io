@@ -180,76 +180,89 @@
     var h = '<section class="section tight"><a class="back-link" href="monday-ladder.html#ladder">← Back to leaderboard</a>' +
       '<div class="pcard">' +
       '<img class="pavatar" src="' + photoFor(who) + '" alt="' + name + '" onerror="this.src=\'https://ui-avatars.com/api/?background=b6e63e&color=060f24&size=160&format=svg&bold=true&name=' + encodeURIComponent(name) + '\'">' +
-      '<div class="pinfo"><span class="tag">Sutton Shuttlers · League player</span>' +
+      '<div class="pinfo"><span class="tag">🏸 Sutton Shuttlers · League player</span>' +
       '<h2>' + name + '</h2>' +
       '<div class="pbadges"><span class="pbadge">#' + myRank + ' of ' + totalPlayers + ' all-time</span>' +
-      '<span class="pbadge">' + winRate + '% win rate</span>' +
       '<span class="pbadge">Playing since ' + fd(first) + '</span></div>' +
-      '<div class="psub">Last played ' + fd(last) + '</div></div></div>';
-
-    // headline stat grid
-    h += '<div class="pstats">' +
-      stat(st.p, 'Matches') + stat(st.w + '–' + st.l, 'W–L') + stat(winRate + '%', 'Win rate') +
-      stat(avg, 'Avg score') + stat(score.total.toFixed(1), 'Rank score') + stat('+' + st.wm, 'Win margin') +
-      '</div>';
+      '<div class="psub">Last played ' + fd(last) + '</div>' +
+      '<div class="phero-stats">' +
+      pstat(st.p, 'Matches') + pstat(st.w + '–' + st.l, 'W–L') + pstat(winRate + '%', 'Win rate') +
+      pstat(avg, 'Avg score') + pstat(score.total.toFixed(1), 'Rank score') + pstat('+' + st.wm, 'Win margin') +
+      '</div></div></div>';
 
     // rank score breakdown bars
     var pieces = [['Win rate', score.wr], ['Volume', score.vs], ['Margin', score.ms], ['Court', score.cs]];
     var mx = Math.max.apply(null, pieces.map(function (x) { return Math.abs(x[1]); }).concat([1]));
-    h += '<div class="card pblock"><h3>Rank score breakdown</h3>';
+    h += '<div class="card pblock"><h3>🏸 Rank score breakdown</h3>';
     pieces.forEach(function (x) {
       var pct = Math.round(100 * Math.abs(x[1]) / Math.max(mx, 20));
       h += '<div class="pbar-row"><span>' + x[0] + '</span><div class="pbar"><i style="width:' + pct + '%"></i></div><b>' + x[1].toFixed(1) + '</b></div>';
     });
-    h += '</div>';
+    h += '<div class="chart-expl">RankScore (the club\'s official ranking formula) = WinRateScore + VolumeScore + MarginScore + CourtScore. Win rate rewards consistency, volume rewards turning up, margin rewards winning big, court rewards playing on the higher courts (Court 1 counts most).</div></div>';
 
-    // form + courts
-    h += '<div class="pgrid">';
-    h += '<div class="card pblock"><h3>Recent form</h3><div class="form-strip">';
-    form.slice(-10).forEach(function (r) { h += '<span class="fchip ' + (r === 'W' ? 'fw' : 'fl') + '">' + r + '</span>'; });
-    h += '</div><div class="psub">Last ' + Math.min(10, form.length) + ' games</div></div>';
+    // recent form — full-width strip of all games, latest first
+    h += '<div class="card pblock"><h3>🏸 Recent form</h3><div class="form-strip wide">';
+    form.slice().reverse().forEach(function (r) { h += '<span class="fchip ' + (r === 'W' ? 'fw' : 'fl') + '">' + r + '</span>'; });
+    h += '</div><div class="psub">All ' + form.length + ' games, newest first — scroll sideways</div></div>';
 
-    h += '<div class="card pblock"><h3>By court</h3><table class="lb-table mini"><tr><th>Court</th><th>Games</th></tr>';
-    var cnames = ['Court 1 (top)', 'Court 2', 'Court 3', 'Court 4'];
-    st.c.forEach(function (c, i) { h += '<tr><td>' + cnames[i] + '</td><td>' + c + '</td></tr>'; });
-    h += '</table></div></div>';
+    // by court, per season
+    h += '<div class="card pblock"><h3>🏸 Games by court — per season</h3><div class="lb-wrap"><table class="lb-table mini"><tr><th>Season</th><th>Court 1</th><th>Court 2</th><th>Court 3</th><th>Court 4</th></tr>';
+    var sKeysAll = Object.keys(seasons).map(Number).sort().reverse();
+    sKeysAll.forEach(function (k) {
+      var s = seasons[k];
+      h += '<tr><td>' + s.label + '</td><td>' + s.c[0] + '</td><td>' + s.c[1] + '</td><td>' + s.c[2] + '</td><td>' + s.c[3] + '</td></tr>';
+    });
+    h += '<tr class="cs-total"><td><b>All time</b></td><td><b>' + st.c[0] + '</b></td><td><b>' + st.c[1] + '</b></td><td><b>' + st.c[2] + '</b></td><td><b>' + st.c[3] + '</b></td></tr>';
+    h += '</table></div><div class="chart-expl">Court 1 is the top court — more games there means a stronger ladder position that night.</div></div>';
 
-    // activity chart (games per month, CSS bars)
+    // activity chart (games per month, CSS bars with counts)
     var mks = Object.keys(byMonth).sort();
     var mmax = Math.max.apply(null, mks.map(function (k) { return byMonth[k]; }));
-    h += '<div class="card pblock"><h3>Activity — games per month</h3><div class="pchart">';
+    h += '<div class="card pblock"><h3>🏸 Activity — games per month</h3><div class="pchart">';
     mks.forEach(function (k) {
       var pc = Math.round(100 * byMonth[k] / mmax);
-      h += '<div class="pcol" title="' + k + ': ' + byMonth[k] + ' games"><i style="height:' + Math.max(4, pc) + '%"></i><span>' + k.slice(5) + '/' + k.slice(2, 4) + '</span></div>';
+      h += '<div class="pcol" title="' + k + ': ' + byMonth[k] + ' games"><em>' + byMonth[k] + '</em><i style="height:' + Math.max(4, pc) + '%"></i><span>' + k.slice(5) + '/' + k.slice(2, 4) + '</span></div>';
     });
     h += '</div></div>';
 
     // season table
-    var sKeys = Object.keys(seasons).map(Number).sort().reverse();
-    h += '<div class="card pblock"><h3>Season by season</h3><div class="lb-wrap"><table class="lb-table"><tr><th>Season</th><th>P</th><th>W</th><th>L</th><th>Win %</th><th>Score</th></tr>';
+    var sKeys = sKeysAll;
+    h += '<div class="card pblock"><h3>🏸 Season by season</h3><div class="lb-wrap"><table class="lb-table"><tr><th>Season</th><th>P</th><th>W</th><th>L</th><th>Win %</th><th>Score</th></tr>';
     sKeys.forEach(function (k) {
       var s = seasons[k], sc = scoreOf(s, seasonMax(k));
       h += '<tr><td>' + s.label + '</td><td>' + s.p + '</td><td>' + s.w + '</td><td>' + s.l + '</td><td>' +
         Math.round(100 * s.w / s.p) + '%</td><td><b>' + sc.total.toFixed(1) + '</b></td></tr>';
     });
-    h += '</table></div></div>';
+    h += '</table></div><div class="chart-expl">Each season\'s Score uses the same RankScore formula (win rate + volume + margin + court strength) but computed only over that season\'s games — so it can be compared with the season tab on the leaderboard.</div></div>';
 
-    // partnerships + rivalries
-    function topOf(map, w) {
-      return Object.keys(map).map(function (n) { var o = map[n]; return { n: n, p: o.p, w: o.w }; })
-        .filter(function (o) { return o.p >= 2; })
-        .sort(function (a, b) { return b.p - a.p || (b.w / b.p) - (a.w / a.p); }).slice(0, 5);
+    // partnerships + rivalries — ordered by win %, min 3 games
+    function topOf(map) {
+      return Object.keys(map).map(function (n) { var o = map[n]; return { n: n, p: o.p, w: o.w, wr: o.w / o.p }; })
+        .filter(function (o) { return o.p >= 3; })
+        .sort(function (a, b) { return b.wr - a.wr || b.p - a.p; }).slice(0, 5);
     }
+    var tp = topOf(partners), fo = topOf(opponents);
+    // pairing insights
+    var bestPartner = tp[0];
+    var favPartner = Object.keys(partners).map(function (n) { return { n: n, p: partners[n].p, w: partners[n].w }; }).sort(function (a, b) { return b.p - a.p; })[0];
+    var rival = Object.keys(opponents).map(function (n) { var o = opponents[n]; return { n: n, p: o.p, w: o.w, wr: o.w / o.p }; }).filter(function (o) { return o.p >= 3; }).sort(function (a, b) { return a.wr - b.wr || b.p - a.p; })[0];
+    var bogey = Object.keys(opponents).map(function (n) { var o = opponents[n]; return { n: n, p: o.p, w: o.w, wr: o.w / o.p }; }).filter(function (o) { return o.p >= 3; }).sort(function (a, b) { return b.wr - a.wr || b.p - a.p; })[0];
+    h += '<div class="insight">';
+    if (bestPartner) h += '🏸 <b>Best pairing:</b> with <b>' + bestPartner.n + '</b> — ' + Math.round(100 * bestPartner.wr) + '% wins across ' + bestPartner.p + ' games together. ';
+    if (favPartner && (!bestPartner || favPartner.n !== bestPartner.n)) h += '<b>Most frequent partner:</b> ' + favPartner.n + ' (' + favPartner.p + ' games). ';
+    if (rival) h += '<b>Toughest opponent:</b> ' + rival.n + ' — ' + name + ' wins only ' + Math.round(100 * rival.wr) + '% of their meetings. ';
+    if (bogey && (!rival || bogey.n !== rival.n)) h += '<b>Favourite opponent:</b> ' + bogey.n + ' — ' + Math.round(100 * bogey.wr) + '% wins against them.';
+    h += '</div>';
     h += '<div class="pgrid">';
-    h += '<div class="card pblock"><h3>Top partners</h3><table class="lb-table mini"><tr><th>Partner</th><th>Games</th><th>Wins</th><th>Win %</th></tr>';
-    var tp = topOf(partners);
+    h += '<div class="card pblock"><h3>🏸 Top partners <span class="hsub">(by win %)</span></h3><table class="lb-table mini"><tr><th>Partner</th><th>Games</th><th>Wins</th><th>Win %</th></tr>';
     if (!tp.length) h += '<tr><td colspan="4">Not enough games yet</td></tr>';
-    tp.forEach(function (o) { h += '<tr><td>' + o.n + '</td><td>' + o.p + '</td><td>' + o.w + '</td><td>' + Math.round(100 * o.w / o.p) + '%</td></tr>'; });
+    tp.forEach(function (o) { h += '<tr><td>' + o.n + '</td><td>' + o.p + '</td><td>' + o.w + '</td><td>' + Math.round(100 * o.wr) + '%</td></tr>'; });
     h += '</table></div>';
-    h += '<div class="card pblock"><h3>Frequent opponents</h3><table class="lb-table mini"><tr><th>Opponent</th><th>Games</th><th>Wins vs</th><th>Win %</th></tr>';
-    var fo = topOf(opponents);
-    if (!fo.length) h += '<tr><td colspan="4">Not enough games yet</td></tr>';
-    fo.forEach(function (o) { h += '<tr><td>' + o.n + '</td><td>' + o.p + '</td><td>' + o.w + '</td><td>' + Math.round(100 * o.w / o.p) + '%</td></tr>'; });
+    h += '<div class="card pblock"><h3>🏸 Toughest opponents <span class="hsub">(by their win % vs ' + name + ')</span></h3><table class="lb-table mini"><tr><th>Opponent</th><th>Games</th><th>Wins vs</th><th>Win %</th></tr>';
+    var foes = Object.keys(opponents).map(function (n) { var o = opponents[n]; return { n: n, p: o.p, w: o.w, wr: o.w / o.p }; })
+      .filter(function (o) { return o.p >= 3; }).sort(function (a, b) { return a.wr - b.wr || b.p - a.p; }).slice(0, 5);
+    if (!foes.length) h += '<tr><td colspan="4">Not enough games yet</td></tr>';
+    foes.forEach(function (o) { h += '<tr><td>' + o.n + '</td><td>' + o.p + '</td><td>' + o.w + '</td><td>' + Math.round(100 * o.wr) + '%</td></tr>'; });
     h += '</table></div></div>';
 
     h += '<div class="lb-note">Stats are live from the club score sheet — they update as soon as new scores are entered.</div></section>';
