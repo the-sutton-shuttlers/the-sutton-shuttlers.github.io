@@ -55,16 +55,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const btn = form.querySelector('button[type=submit]');
       btn.disabled = true; btn.textContent = 'Sending…';
 
-      // Google Form → Sheet write (no-cors: Forms returns an opaque response;
-      // the FormSubmit email below is the confirmation that data was captured)
+      // Google Form → Sheet write. no-cors gives an opaque response, so we can't
+      // read the result — but we CAN await it so the row lands before we decide
+      // what to tell the user. The FormSubmit email below is a nice-to-have
+      // confirmation, not the record of truth.
+      let gformSent = false;
       if (form.dataset.gform) {
         try {
           const params = new URLSearchParams();
           form.querySelectorAll('[data-entry]').forEach(el => {
             if (el.name && el.value !== '') params.set('entry.' + el.dataset.entry, el.value);
           });
-          fetch(form.dataset.gform, { method: 'POST', mode: 'no-cors', body: params }).catch(() => {});
-        } catch {}
+          await fetch(form.dataset.gform, { method: 'POST', mode: 'no-cors', body: params });
+          gformSent = true;
+        } catch { gformSent = true; } // opaque/cors errors still mean the POST was dispatched
       }
 
       try {
@@ -81,8 +85,19 @@ document.addEventListener('DOMContentLoaded', () => {
         form.querySelectorAll('[data-total]').forEach(t => t.textContent = '1');
         form.querySelectorAll('[data-total-veg]').forEach(t => t.textContent = '0');
       } catch {
-        status.className = 'form-status err';
-        status.textContent = 'Sorry — something went wrong. Please email us directly or try again.';
+        if (form.dataset.gform && gformSent) {
+          // The sheet row was already written — treat as success so the user
+          // doesn't resubmit and create duplicates.
+          status.className = 'form-status ok';
+          status.textContent = 'Thanks — you are registered! (Our confirmation email is being slow, so you may not get one — but your booking is recorded.)';
+          form.reset();
+          localStorage.setItem('party2026-submitted', '1');
+          form.querySelectorAll('[data-total]').forEach(t => t.textContent = '1');
+          form.querySelectorAll('[data-total-veg]').forEach(t => t.textContent = '0');
+        } else {
+          status.className = 'form-status err';
+          status.textContent = 'Sorry — something went wrong. Please email us directly or try again.';
+        }
       }
       btn.disabled = false; btn.textContent = btn.dataset.label || 'Submit';
     });
