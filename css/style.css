@@ -314,3 +314,17 @@ a.pod{text-decoration:none;color:inherit}
 .cs-total td{border-top:2px solid rgba(182,230,62,.35)}
 .pthumb{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#060f24;flex-shrink:0}
 @media (max-width:560px){.podium{gap:8px}.pod-photo{width:52px;height:52px}.pod.gold .pod-photo{width:64px;height:64px}.pod-pts{font-size:15px}.pod-medal{font-size:22px}}
+
+/* spacing + scrollable table + dual chart */
+.ladder-head{padding-bottom:20px}
+#club-stats{padding-top:12px}
+.lb-scroll{max-height:520px;overflow-y:auto}
+.lb-scroll .lb-table th{position:sticky;top:0;background:#0e2a5e;z-index:1}
+.chart-legend{display:flex;gap:18px;font-size:12.5px;color:#9fb0d8;margin-bottom:6px}
+.chart-legend .lg{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.lg.lime{background:#b6e63e}.lg.teal{background:#38c6f4}
+.pchart.dual .pcol{flex-direction:row;align-items:flex-end;justify-content:center;gap:3px;flex-wrap:wrap}
+.pchart.dual .pcol i{width:45%;border-radius:4px 4px 0 0}
+.pchart.dual .pcol .b1{background:linear-gradient(180deg,#b6e63e,#5c7a1e)}
+.pchart.dual .pcol .b2{background:linear-gradient(180deg,#38c6f4,#0e2a5e)}
+.pchart.dual .pcol span{width:100%;text-align:center}

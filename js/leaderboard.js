@@ -112,23 +112,24 @@
     function buildStats() {
       var csRoot = document.getElementById('club-stats-body');
       if (!csRoot) return;
-      var dates = {}, players = {}, bySeason = {}, byMonth = {};
+      var dates = {}, players = {}, bySeason = {}, byMonth = {}, monthPlayers = {};
       matches.forEach(function (m) {
         dates[m.d.toDateString()] = 1;
         var k = seasonKey(m.d);
         var s = bySeason[k] = bySeason[k] || { games: 0, dates: {}, players: {} };
         s.games++; s.dates[m.d.toDateString()] = 1;
-        m.teamA.concat(m.teamB).forEach(function (n) {
-          if (n && !/dummy|^player \d$/i.test(n)) { players[n] = 1; s.players[n] = 1; }
-        });
         var mk = m.d.getFullYear() + '-' + ('0' + (m.d.getMonth() + 1)).slice(-2);
         byMonth[mk] = (byMonth[mk] || 0) + 1;
+        var mp = monthPlayers[mk] = monthPlayers[mk] || {};
+        m.teamA.concat(m.teamB).forEach(function (n) {
+          if (n && !/dummy|^player \d$/i.test(n)) { players[n] = 1; s.players[n] = 1; mp[n] = 1; }
+        });
       });
       var nSessions = Object.keys(dates).length;
       var nPlayers = Object.keys(players).length;
       var h = '<div class="pstats">' +
         '<div class="pstat"><b>' + matches.length + '</b><span>Games played</span></div>' +
-        '<div class="pstat"><b>' + nSessions + '</b><span>Monday nights</span></div>' +
+        '<div class="pstat"><b>' + nSessions + '</b><span>Ladder nights</span></div>' +
         '<div class="pstat"><b>' + nPlayers + '</b><span>Players</span></div>' +
         '<div class="pstat"><b>' + Math.round(matches.length / Math.max(nSessions, 1)) + '</b><span>Games / night</span></div>' +
         '<div class="pstat"><b>' + seasons.length + '</b><span>Seasons</span></div>' +
@@ -146,10 +147,17 @@
       // activity chart — games per month
       var mks = Object.keys(byMonth).sort();
       var mmax = Math.max.apply(null, mks.map(function (k) { return byMonth[k]; }));
-      h += '<div class="card pblock"><h3>Club activity — games per month</h3><div class="pchart">';
+      h += '<div class="card pblock"><h3>Club activity — per month</h3>' +
+        '<div class="chart-legend"><span><i class="lg lime"></i>Games played</span><span><i class="lg teal"></i>Players on court</span></div>' +
+        '<div class="pchart dual">';
+      var pmax = Math.max.apply(null, mks.map(function (k) { return Object.keys(monthPlayers[k] || {}).length; }));
       mks.forEach(function (k) {
         var pc = Math.round(100 * byMonth[k] / mmax);
-        h += '<div class="pcol" title="' + k + ': ' + byMonth[k] + ' games"><i style="height:' + Math.max(4, pc) + '%"></i><span>' + k.slice(5) + '/' + k.slice(2, 4) + '</span></div>';
+        var np = Object.keys(monthPlayers[k] || {}).length;
+        var pp = Math.round(100 * np / pmax);
+        h += '<div class="pcol" title="' + k + ': ' + byMonth[k] + ' games · ' + np + ' players">' +
+          '<i class="b1" style="height:' + Math.max(4, pc) + '%"></i><i class="b2" style="height:' + Math.max(4, pp) + '%"></i>' +
+          '<span>' + k.slice(5) + '/' + k.slice(2, 4) + '</span></div>';
       });
       h += '</div></div>';
       csRoot.innerHTML = h;
@@ -234,7 +242,7 @@
         });
         h += '</div>';
 
-        h += '<div class="lb-wrap"><table class="lb-table"><tr><th>#</th><th>Player</th><th>P</th><th>W</th><th>L</th><th>Win %</th><th>Score</th></tr>';
+        h += '<div class="lb-wrap lb-scroll"><table class="lb-table"><tr><th>#</th><th>Player</th><th>P</th><th>W</th><th>L</th><th>Win %</th><th>Score</th></tr>';
         st.forEach(function (s, i) {
           var cls = i < 3 ? ' class="top' + (i + 1) + '"' : '';
           h += '<tr' + cls + '><td>' + (i + 1) + '</td><td><a class="lb-link" href="player.html?n=' + encodeURIComponent(s.n) + '">' + displayName(s.n) + '</a></td><td>' + s.p + '</td><td>' + s.w +
