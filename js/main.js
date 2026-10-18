@@ -1,8 +1,3 @@
-// Google Apps Script web-app URL that writes event registrations to the club's
-// Google Sheet. Deploy the script under suttons.shuttlers@gmail.com and paste
-// the /exec URL here. Empty string = sheet sync disabled (emails still sent).
-window.SHEET_WEBHOOK_URL = '';
-
 // Mobile nav
 document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.querySelector('.nav-toggle');
@@ -31,12 +26,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const btn = form.querySelector('button[type=submit]');
       btn.disabled = true; btn.textContent = 'Sending…';
 
-      // Sheet write (no-cors: Apps Script can't send CORS headers; email result is the confirmation)
-      if (window.SHEET_WEBHOOK_URL && form.dataset.eventSheet) {
+      // Google Form → Sheet write (no-cors: Forms returns an opaque response;
+      // the FormSubmit email below is the confirmation that data was captured)
+      if (form.dataset.gform) {
         try {
-          const params = new URLSearchParams(data);
-          params.set('event', form.dataset.eventSheet);
-          fetch(window.SHEET_WEBHOOK_URL, { method: 'POST', mode: 'no-cors', body: params }).catch(() => {});
+          const params = new URLSearchParams();
+          form.querySelectorAll('[data-entry]').forEach(el => {
+            if (el.name && el.value !== '') params.set('entry.' + el.dataset.entry, el.value);
+          });
+          fetch(form.dataset.gform, { method: 'POST', mode: 'no-cors', body: params }).catch(() => {});
         } catch {}
       }
 
@@ -61,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Party form: live totals + veg-can't-exceed-group check
-  const party = document.querySelector('form[data-event-sheet]');
+  const party = document.querySelector('form[data-gform]');
   if (party) {
     const groups = [['adults','adults-veg'],['kids','kids-veg'],['u5','u5-veg']];
     const recalc = () => {
