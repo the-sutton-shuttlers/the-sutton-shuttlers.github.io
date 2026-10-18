@@ -116,13 +116,13 @@
       matches.forEach(function (m) {
         dates[m.d.toDateString()] = 1;
         var k = seasonKey(m.d);
-        var s = bySeason[k] = bySeason[k] || { games: 0, dates: {}, players: {} };
+        var s = bySeason[k] = bySeason[k] || { games: 0, dates: {}, players: {}, counts: {} };
         s.games++; s.dates[m.d.toDateString()] = 1;
         var mk = m.d.getFullYear() + '-' + ('0' + (m.d.getMonth() + 1)).slice(-2);
         byMonth[mk] = (byMonth[mk] || 0) + 1;
         var mp = monthPlayers[mk] = monthPlayers[mk] || {};
         m.teamA.concat(m.teamB).forEach(function (n) {
-          if (n && !/dummy|^player \d$/i.test(n)) { players[n] = 1; s.players[n] = 1; mp[n] = 1; }
+          if (n && !/dummy|^player \d$/i.test(n)) { players[n] = 1; s.players[n] = 1; mp[n] = 1; s.counts[n] = (s.counts[n] || 0) + 1; }
         });
       });
       var nSessions = Object.keys(dates).length;
@@ -144,6 +144,18 @@
       h += '<tr class="cs-total"><td><b>All time</b></td><td><b>' + nSessions + '</b></td><td><b>' + matches.length +
         '</b></td><td><b>' + nPlayers + '</b></td><td><b>' + Math.round(matches.length / Math.max(nSessions, 1)) + '</b></td></tr>';
       h += '</table></div>';
+      // most-committed player per season — showing up is the win
+      h += '<div class="ironman"><h4>🏸 Iron Man Award — most games played each season</h4><div class="im-grid">';
+      Object.keys(bySeason).sort().forEach(function (k) {
+        var s = bySeason[k], best = null, bestN = 0;
+        Object.keys(s.counts).forEach(function (n) { if (s.counts[n] > bestN) { bestN = s.counts[n]; best = n; } });
+        if (!best) return;
+        h += '<a class="im-card" href="player.html?n=' + encodeURIComponent(best) + '">' +
+          '<img class="im-photo" src="' + photoFor(best) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
+          '<div><span class="im-season">Sep ' + k + ' – Aug ' + (+k + 1) + '</span>' +
+          '<b>' + displayName(best) + '</b><span class="im-games">' + bestN + ' games played</span></div></a>';
+      });
+      h += '</div><div class="chart-expl">Turning up counts more than winning — these players showed up the most.</div></div>';
       // activity chart — games per month
       var mks = Object.keys(byMonth).sort();
       var mmax = Math.max.apply(null, mks.map(function (k) { return byMonth[k]; }));
@@ -258,8 +270,8 @@
         b.addEventListener('click', function () { render(+b.dataset.i); });
       });
     }
-    buildStats();
     loadPhotos(function () {
+      buildStats();
       buildPlayers();
       render(curIdx);
     });

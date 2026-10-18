@@ -366,3 +366,14 @@ a.pod{text-decoration:none;color:inherit}
 .pod-pts{font-size:14px}
 .pod-sub{font-size:10.5px;margin-top:1px}
 @media (max-width:560px){.podium{gap:6px}.pod-photo{width:34px;height:34px}.pod.gold .pod-photo{width:42px;height:42px}.pod-name{font-size:11.5px}.pod-pts{font-size:13px}.pod-sub{font-size:10px}}
+
+/* Iron Man award strip */
+.ironman{margin:16px 0}
+.ironman h4{font-family:Oswald,sans-serif;font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:#b6e63e;margin:0 0 10px}
+.im-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+a.im-card{display:flex;align-items:center;gap:10px;background:#0e2a5e;border:1px solid rgba(245,197,24,.35);border-radius:12px;padding:10px 12px;text-decoration:none;color:inherit;transition:border-color .2s}
+a.im-card:hover{border-color:#f5c518}
+.im-photo{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #f5c518;background:#060f24;flex-shrink:0}
+.im-season{display:block;font-size:10.5px;color:#9fb0d8;text-transform:uppercase;letter-spacing:.05em}
+.im-card b{display:block;font-size:14px;color:#fff}
+.im-games{font-size:11.5px;color:#b6e63e}
