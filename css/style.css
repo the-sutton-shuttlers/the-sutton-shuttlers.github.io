@@ -475,3 +475,11 @@ td.neg{color:#ff7a7a;font-weight:700}
 .miles{max-height:220px;overflow-y:auto;padding-right:4px}
 .miles::-webkit-scrollbar{width:6px}
 .miles::-webkit-scrollbar-thumb{background:rgba(182,230,62,.35);border-radius:3px}
+
+/* keep wide tables inside their card on mobile */
+.card .lb-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.card .lb-wrap .lb-table{min-width:420px}
+@media (max-width:700px){
+  .card.pblock .lb-wrap{margin:0 -2px}
+  .lb-table.mini{min-width:340px}
+}
