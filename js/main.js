@@ -4,16 +4,45 @@ document.addEventListener('DOMContentLoaded', () => {
   const links = document.querySelector('.nav-links');
   if (toggle) toggle.addEventListener('click', () => links.classList.toggle('open'));
 
-  // Lightbox
+  // Lightbox slideshow
   const lb = document.querySelector('.lightbox');
   if (lb) {
-    document.querySelectorAll('.gallery img').forEach(img => {
+    const lbImg = lb.querySelector('img');
+    const lbCount = lb.querySelector('.lb-count');
+    const prev = lb.querySelector('.lb-prev');
+    const next = lb.querySelector('.lb-next');
+    let pics = [], idx = 0;
+    const show = i => {
+      idx = (i + pics.length) % pics.length;
+      lbImg.src = pics[idx].src;
+      if (lbCount) lbCount.textContent = (idx + 1) + ' / ' + pics.length;
+    };
+    document.querySelectorAll('.gallery img').forEach((img, i) => {
       img.addEventListener('click', () => {
-        lb.querySelector('img').src = img.src;
+        pics = Array.from(img.closest('.gallery').querySelectorAll('img'));
+        show(pics.indexOf(img));
         lb.classList.add('open');
       });
     });
-    lb.addEventListener('click', () => lb.classList.remove('open'));
+    const go = d => { if (pics.length) show(idx + d); };
+    if (prev) prev.addEventListener('click', e => { e.stopPropagation(); go(-1); });
+    if (next) next.addEventListener('click', e => { e.stopPropagation(); go(1); });
+    lb.addEventListener('click', e => { if (e.target === lb || e.target.classList.contains('close')) lb.classList.remove('open'); });
+    lbImg.addEventListener('click', e => { e.stopPropagation(); go(1); });
+    document.addEventListener('keydown', e => {
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'Escape') lb.classList.remove('open');
+      if (e.key === 'ArrowLeft') go(-1);
+      if (e.key === 'ArrowRight') go(1);
+    });
+    let tx = null;
+    lb.addEventListener('touchstart', e => tx = e.touches[0].clientX, { passive: true });
+    lb.addEventListener('touchend', e => {
+      if (tx === null) return;
+      const dx = e.changedTouches[0].clientX - tx;
+      if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+      tx = null;
+    }, { passive: true });
   }
 
   // AJAX form submit (FormSubmit email + optional Google Apps Script sheet webhook)
