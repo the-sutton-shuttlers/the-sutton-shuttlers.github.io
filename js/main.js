@@ -75,12 +75,21 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     party.addEventListener('input', recalc);
     party.addEventListener('submit', e => {
+      const status = party.querySelector('.form-status');
+      const labels = { adults: 'Adults', kids: 'Children 5-11', u5: 'Children under 5' };
+      let bad = null;
+      groups.forEach(([g, v]) => {
+        const gn = +party.querySelector('#' + g).value || 0;
+        const vn = +party.querySelector('#' + v).value || 0;
+        if (vn > gn) bad = labels[g];
+      });
       const total = ['adults','kids','u5'].reduce((s, id) => s + (+party.querySelector('#' + id).value || 0), 0);
-      if (total < 1) {
+      if (bad || total < 1) {
         e.preventDefault();
-        const status = party.querySelector('.form-status');
         status.className = 'form-status err';
-        status.textContent = 'Please add at least one guest.';
+        status.textContent = bad
+          ? bad + ': the vegetarian count is more than the total guests — please correct the numbers.'
+          : 'Please add at least one guest.';
       }
     });
     recalc();

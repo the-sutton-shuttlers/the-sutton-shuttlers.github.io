@@ -216,3 +216,14 @@ td .pill { background: rgba(56,198,244,.12); color: var(--teal); font-size: 12px
   .nav-item { display: block; }
   .sub-menu { display: block; position: static; border: 0; background: transparent; box-shadow: none; padding: 0 0 0 18px; }
 }
+
+/* --- 2-col grid (events page) + mobile polish --- */
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+
+@media (max-width: 520px) {
+  .party-group { padding: 14px; }
+  .section { padding-left: 16px; padding-right: 16px; }
+  .split { gap: 24px; }
+  .btn { padding: 14px 24px; width: 100%; text-align: center; box-sizing: border-box; }
+  .party-total { font-size: 14px; }
+}
