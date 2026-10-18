@@ -8,16 +8,50 @@
 
   root.innerHTML = '<div class="lb-loading">Loading live leaderboard…</div>';
 
-  function loadSheet(cb) {
+  function loadTab(tab, cb) {
     var g = window.google = window.google || {};
     g.visualization = g.visualization || {};
     g.visualization.Query = g.visualization.Query || {};
     g.visualization.Query.setResponse = cb;
     var s = document.createElement('script');
     s.src = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID +
-      '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(TAB);
+      '/gviz/tq?tqx=out:json&sheet=' + encodeURIComponent(tab);
     s.onerror = function () { cb(null); };
     document.head.appendChild(s);
+  }
+  function loadSheet(cb) { loadTab(TAB, cb); }
+
+  // Photo + full-name map from the Ranking_ALL tab (cols 21 name, 22 photo link)
+  var photos = {}, fullNames = {};
+  function photoFor(name) {
+    var k = (name || '').toLowerCase();
+    if (photos[k]) return photos[k];
+    var first = k.split(' ')[0];
+    for (var key in photos) if (key.split(' ')[0] === first) return photos[key];
+    return 'https://ui-avatars.com/api/?background=b6e63e&color=060f24&size=100&format=svg&bold=true&name=' + encodeURIComponent(name || '');
+  }
+  function displayName(name) {
+    var k = (name || '').toLowerCase();
+    if (fullNames[k]) return fullNames[k];
+    var first = k.split(' ')[0];
+    for (var key in fullNames) if (key.split(' ')[0] === first) return fullNames[key];
+    return name;
+  }
+  function loadPhotos(cb) {
+    loadTab('Ranking_ALL', function (res) {
+      if (res && res.table) {
+        res.table.rows.forEach(function (rw) {
+          var c = rw.c || [];
+          var n = (c[21] && c[21].v || '').toString().trim();
+          var link = (c[22] && c[22].v || '').toString().trim();
+          if (!n || !link) return;
+          photos[n.toLowerCase()] = link;
+          var m = link.match(/[?&]name=([^&]+)/);
+          if (m) fullNames[n.toLowerCase()] = decodeURIComponent(m[1].replace(/\+/g, ' '));
+        });
+      }
+      cb();
+    });
   }
 
   var MONTHS = { january: 0, february: 1, march: 2, april: 3, may: 4, june: 5, july: 6, august: 7, september: 8, october: 9, november: 10, december: 11 };
@@ -72,52 +106,68 @@
     var tabs = [{ label: 'All time', all: true }].concat(seasons);
     var curIdx = tabs.length - 1; // default: most recent season
 
+    function seasonKey(d) { var y = d.getFullYear(), mo = d.getMonth(); return (mo >= 8) ? y : y - 1; }
+
     // --- club-level stats ---
-    (function () {
+    function buildStats() {
       var csRoot = document.getElementById('club-stats-body');
-      if (csRoot) {
-        var dates = {}, players = {}, seasonCounts = {};
-        matches.forEach(function (m) {
-          dates[m.d.toDateString()] = 1;
-          m.teamA.concat(m.teamB).forEach(function (n) {
-            if (n && !/dummy|^player \d$/i.test(n)) players[n] = 1;
-          });
-          var y = m.d.getFullYear(), mo = m.d.getMonth();
-          var sk = (mo >= 8) ? y : y - 1;
-          seasonCounts[sk] = (seasonCounts[sk] || 0) + 1;
+      if (!csRoot) return;
+      var dates = {}, players = {}, bySeason = {}, byMonth = {};
+      matches.forEach(function (m) {
+        dates[m.d.toDateString()] = 1;
+        var k = seasonKey(m.d);
+        var s = bySeason[k] = bySeason[k] || { games: 0, dates: {}, players: {} };
+        s.games++; s.dates[m.d.toDateString()] = 1;
+        m.teamA.concat(m.teamB).forEach(function (n) {
+          if (n && !/dummy|^player \d$/i.test(n)) { players[n] = 1; s.players[n] = 1; }
         });
-        var nSessions = Object.keys(dates).length;
-        var nPlayers = Object.keys(players).length;
-        var first = lastDate, last = lastDate;
-        matches.forEach(function (m) { if (m.d < first) first = m.d; });
-        var fd = function (d) { return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); };
-        var h = '<div class="pstats">' +
-          '<div class="pstat"><b>' + matches.length + '</b><span>Games played</span></div>' +
-          '<div class="pstat"><b>' + nSessions + '</b><span>Monday nights</span></div>' +
-          '<div class="pstat"><b>' + nPlayers + '</b><span>Players</span></div>' +
-          '<div class="pstat"><b>' + (matches.length / Math.max(nSessions, 1)).toFixed(1) + '</b><span>Games / night</span></div>' +
-          '<div class="pstat"><b>' + seasons.length + '</b><span>Seasons</span></div>' +
-          '<div class="pstat"><b>' + fd(first) + '</b><span>First game</span></div>' +
-          '</div>' +
-          '<div class="cs-seasons">' +
-          Object.keys(seasonCounts).sort().map(function (k) {
-            return '<span class="pbadge">Sep ' + k + '–Aug ' + (+k + 1) + ': <b>' + seasonCounts[k] + '</b> games</span>';
-          }).join('') + '</div>' +
-          '<div class="psub" style="margin-top:8px">Latest scores: ' + fd(last) + '</div>';
-        csRoot.innerHTML = h;
-      }
+        var mk = m.d.getFullYear() + '-' + ('0' + (m.d.getMonth() + 1)).slice(-2);
+        byMonth[mk] = (byMonth[mk] || 0) + 1;
+      });
+      var nSessions = Object.keys(dates).length;
+      var nPlayers = Object.keys(players).length;
+      var h = '<div class="pstats">' +
+        '<div class="pstat"><b>' + matches.length + '</b><span>Games played</span></div>' +
+        '<div class="pstat"><b>' + nSessions + '</b><span>Monday nights</span></div>' +
+        '<div class="pstat"><b>' + nPlayers + '</b><span>Players</span></div>' +
+        '<div class="pstat"><b>' + Math.round(matches.length / Math.max(nSessions, 1)) + '</b><span>Games / night</span></div>' +
+        '<div class="pstat"><b>' + seasons.length + '</b><span>Seasons</span></div>' +
+        '</div>';
+      // per-season table
+      h += '<div class="lb-wrap"><table class="lb-table"><tr><th>Season</th><th>Nights</th><th>Games</th><th>Players</th><th>Games/night</th></tr>';
+      Object.keys(bySeason).sort().forEach(function (k) {
+        var s = bySeason[k], n = Object.keys(s.dates).length;
+        h += '<tr><td>Sep ' + k + ' – Aug ' + (+k + 1) + '</td><td>' + n + '</td><td>' + s.games +
+          '</td><td>' + Object.keys(s.players).length + '</td><td>' + Math.round(s.games / Math.max(n, 1)) + '</td></tr>';
+      });
+      h += '<tr class="cs-total"><td><b>All time</b></td><td><b>' + nSessions + '</b></td><td><b>' + matches.length +
+        '</b></td><td><b>' + nPlayers + '</b></td><td><b>' + Math.round(matches.length / Math.max(nSessions, 1)) + '</b></td></tr>';
+      h += '</table></div>';
+      // activity chart — games per month
+      var mks = Object.keys(byMonth).sort();
+      var mmax = Math.max.apply(null, mks.map(function (k) { return byMonth[k]; }));
+      h += '<div class="card pblock"><h3>Club activity — games per month</h3><div class="pchart">';
+      mks.forEach(function (k) {
+        var pc = Math.round(100 * byMonth[k] / mmax);
+        h += '<div class="pcol" title="' + k + ': ' + byMonth[k] + ' games"><i style="height:' + Math.max(4, pc) + '%"></i><span>' + k.slice(5) + '/' + k.slice(2, 4) + '</span></div>';
+      });
+      h += '</div></div>';
+      csRoot.innerHTML = h;
+    }
+
+    function buildPlayers() {
       var pgRoot = document.getElementById('players-grid');
-      if (pgRoot) {
-        var all = standing(tabs[0]);
-        var h2 = '<div class="players">';
-        all.forEach(function (s, i) {
-          h2 += '<a class="player ranked" href="player.html?n=' + encodeURIComponent(s.n) + '">' +
-            '<span class="prank">' + (i + 1) + '</span>' +
-            '<div><b>' + s.n + '</b><small>' + s.p + ' games · ' + Math.round(100 * s.winRate) + '% win</small></div></a>';
-        });
-        pgRoot.innerHTML = h2 + '</div>';
-      }
-    })();
+      if (!pgRoot) return;
+      var all = standing(tabs[0]);
+      var h = '<div class="players">';
+      all.forEach(function (s, i) {
+        h += '<a class="player ranked" href="player.html?n=' + encodeURIComponent(s.n) + '">' +
+          '<span class="prank">' + (i + 1) + '</span>' +
+          '<img class="pthumb" src="' + photoFor(s.n) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
+          '<div><b>' + displayName(s.n) + '</b><small>' + s.p + ' games · ' + s.w + ' wins · ' + Math.round(100 * s.winRate) + '%</small></div></a>';
+      });
+      pgRoot.innerHTML = h + '</div>';
+    }
 
     // Club ranking model (same as the 'ranking' tab):
     //   WinRateScore = winRate × (50 if played > 30% of max, else 30)
@@ -160,7 +210,9 @@
       var season = tabs[idx];
       var st = standing(season);
       var maxGames = st.length ? Math.max.apply(null, st.map(function (s) { return s.p; })) : 0;
-      var h = '<div class="lb-tabs">';
+      var h = '<p class="lb-tag">Every point counts. Every Monday matters.</p>' +
+        '<p class="lb-desc">Ranked on the club\'s RankScore — a blend of win rate, games played, winning margin and court strength (Court 1 counts most).</p>' +
+        '<div class="lb-tabs">';
       tabs.forEach(function (t, i) {
         h += '<button class="lb-tab' + (i === idx ? ' on' : '') + '" data-i="' + i + '">' + t.label + '</button>';
       });
@@ -170,19 +222,22 @@
       if (st.length) {
         var top3 = st.slice(0, 3);
         h += '<div class="podium">';
-        var order = [1, 0, 2], medals = ['gold', 'silver', 'bronze'];
+        var order = [1, 0, 2], medals = ['gold', 'silver', 'bronze'], gongs = ['🥈', '🥇', '🥉'];
         order.forEach(function (pos) {
           var s = top3[pos]; if (!s) return;
-          h += '<div class="pod ' + medals[pos] + '"><div class="pod-rank">' + (pos + 1) + '</div>' +
-            '<div class="pod-name"><a class="lb-link" href="player.html?n=' + encodeURIComponent(s.n) + '">' + s.n + '</a></div><div class="pod-pts">' + s.score.toFixed(1) + '</div>' +
-            '<div class="pod-sub">' + s.w + 'W · ' + Math.round(100 * s.winRate) + '%</div></div>';
+          h += '<a class="pod ' + medals[pos] + '" href="player.html?n=' + encodeURIComponent(s.n) + '">' +
+            '<div class="pod-medal">' + gongs[pos] + '</div>' +
+            '<img class="pod-photo" src="' + photoFor(s.n) + '" alt="' + displayName(s.n) + '" onerror="this.style.display=\'none\'">' +
+            '<div class="pod-rank">' + (pos + 1) + '</div>' +
+            '<div class="pod-name">' + displayName(s.n) + '</div><div class="pod-pts">' + s.score.toFixed(1) + '</div>' +
+            '<div class="pod-sub">' + s.w + 'W · ' + Math.round(100 * s.winRate) + '%</div></a>';
         });
         h += '</div>';
 
         h += '<div class="lb-wrap"><table class="lb-table"><tr><th>#</th><th>Player</th><th>P</th><th>W</th><th>L</th><th>Win %</th><th>Score</th></tr>';
         st.forEach(function (s, i) {
           var cls = i < 3 ? ' class="top' + (i + 1) + '"' : '';
-          h += '<tr' + cls + '><td>' + (i + 1) + '</td><td><a class="lb-link" href="player.html?n=' + encodeURIComponent(s.n) + '">' + s.n + '</a></td><td>' + s.p + '</td><td>' + s.w +
+          h += '<tr' + cls + '><td>' + (i + 1) + '</td><td><a class="lb-link" href="player.html?n=' + encodeURIComponent(s.n) + '">' + displayName(s.n) + '</a></td><td>' + s.p + '</td><td>' + s.w +
             '</td><td>' + s.l + '</td><td>' + Math.round(100 * s.winRate) + '%</td><td><b>' + s.score.toFixed(1) + '</b></td></tr>';
         });
         h += '</table></div>';
@@ -195,6 +250,10 @@
         b.addEventListener('click', function () { render(+b.dataset.i); });
       });
     }
-    render(curIdx);
+    buildStats();
+    loadPhotos(function () {
+      buildPlayers();
+      render(curIdx);
+    });
   });
 })();
