@@ -343,12 +343,12 @@
     }).filter(function (o) { return o.p >= 5 && o.wo !== null; })
       .sort(function (a, b) { return (b.wr - b.wo) - (a.wr - a.wo); }).slice(0, 5);
     if (chem.length) {
-      h += '<div class="card pblock"><h3>🏸 Partnership chemistry <span class="hsub">(win % with vs without)</span></h3><table class="lb-table mini"><tr><th>Partner</th><th>Games</th><th>With</th><th>Without</th><th>Boost</th></tr>';
+      h += '<div class="card pblock"><h3>🏸 Partnership chemistry <span class="hsub">(win % with vs without)</span></h3><div class="lb-wrap"><table class="lb-table mini"><tr><th>Partner</th><th>Games</th><th>With</th><th>Without</th><th>Boost</th></tr>';
       chem.forEach(function (o) {
         var boost = o.wr - o.wo, cls = boost >= 0 ? 'pos' : 'neg';
         h += '<tr><td>' + o.n + '</td><td>' + o.p + '</td><td>' + Math.round(100 * o.wr) + '%</td><td>' + Math.round(100 * o.wo) + '%</td><td class="' + cls + '">' + (boost >= 0 ? '+' : '') + Math.round(100 * boost) + '%</td></tr>';
       });
-      h += '</table><div class="chart-expl">Positive boost = you win more with them on your side — pick them at rotation!</div></div>';
+      h += '</table></div><div class="chart-expl">Positive boost = you win more with them on your side — pick them at rotation!</div></div>';
     }
 
     // ===== Milestones =====
@@ -387,16 +387,16 @@
     if (bogey && (!rival || bogey.n !== rival.n)) h += '<b>Favourite opponent:</b> ' + bogey.n + ' — ' + Math.round(100 * bogey.wr) + '% wins against them.';
     h += '</div>';
     h += '<div class="pgrid">';
-    h += '<div class="card pblock"><h3>🏸 Top partners <span class="hsub">(by win %)</span></h3><table class="lb-table mini"><tr><th>Partner</th><th>Games</th><th>Wins</th><th>Win %</th></tr>';
+    h += '<div class="card pblock"><h3>🏸 Top partners <span class="hsub">(by win %)</span></h3><div class="lb-wrap"><table class="lb-table mini"><tr><th>Partner</th><th>Games</th><th>Wins</th><th>Win %</th></tr>';
     if (!tp.length) h += '<tr><td colspan="4">Not enough games yet</td></tr>';
     tp.forEach(function (o) { h += '<tr><td>' + o.n + '</td><td>' + o.p + '</td><td>' + o.w + '</td><td>' + Math.round(100 * o.wr) + '%</td></tr>'; });
-    h += '</table></div>';
-    h += '<div class="card pblock"><h3>🏸 Toughest opponents <span class="hsub">(by their win % vs ' + name + ')</span></h3><table class="lb-table mini"><tr><th>Opponent</th><th>Games</th><th>Wins vs</th><th>Win %</th></tr>';
+    h += '</table></div></div>';
+    h += '<div class="card pblock"><h3>🏸 Toughest opponents <span class="hsub">(by their win % vs ' + name + ')</span></h3><div class="lb-wrap"><table class="lb-table mini"><tr><th>Opponent</th><th>Games</th><th>Wins vs</th><th>Win %</th></tr>';
     var foes = Object.keys(opponents).map(function (n) { var o = opponents[n]; return { n: n, p: o.p, w: o.w, wr: o.w / o.p }; })
       .filter(function (o) { return o.p >= 3; }).sort(function (a, b) { return a.wr - b.wr || b.p - a.p; }).slice(0, 5);
     if (!foes.length) h += '<tr><td colspan="4">Not enough games yet</td></tr>';
     foes.forEach(function (o) { h += '<tr><td>' + o.n + '</td><td>' + o.p + '</td><td>' + o.w + '</td><td>' + Math.round(100 * o.wr) + '%</td></tr>'; });
-    h += '</table></div></div>';
+    h += '</table></div></div></div>';
 
     h += '<div class="lb-note">Stats are live from the club score sheet — they update as soon as new scores are entered.</div></section>';
     root.innerHTML = h;
