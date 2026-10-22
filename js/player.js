@@ -24,49 +24,35 @@
     document.head.appendChild(s);
   }
 
-  fetchTab('Ranking_ALL', function (rankRows) {
-    fetchTab('Ranking', function (nameRows) {
-      fetchTab('4. Score Table', function (scoreRows) {
-        if (!scoreRows) { root.innerHTML = '<div class="lb-loading">Could not load stats right now — try again later.</div>'; return; }
-        build(rankRows || [], nameRows || [], scoreRows);
-      });
+  fetchTab('Ranking', function (nameRows) {
+    fetchTab('4. Score Table', function (scoreRows) {
+      if (!scoreRows) { root.innerHTML = '<div class="lb-loading">Could not load stats right now — try again later.</div>'; return; }
+      build(nameRows || [], scoreRows);
     });
   });
 
-  function build(rankRows, nameRows, rows) {
-    // --- photo + display name map from Ranking_ALL (cols: 21 name, 22 photo) ---
-    var photos = {}, fullNames = {};
-    rankRows.forEach(function (r) {
-      var n = (r[21] && r[21].v || '').toString().trim(), link = (r[22] && r[22].v || '').toString().trim();
-      if (!n || !link) return;
-      photos[n.toLowerCase()] = link;
-      var m = link.match(/[?&]name=([^&]+)/);
-      if (m) fullNames[n.toLowerCase()] = decodeURIComponent(m[1].replace(/\+/g, ' '));
-    });
-    var rankFull = {};
+  function build(nameRows, rows) {
+    var photos = {}, rankFull = {}, rankShort = {};
     nameRows.forEach(function (r) {
       var full = (r[1] && r[1].v || '').toString().trim(), short = (r[2] && r[2].v || '').toString().trim();
       if (!full || !short) return;
-      rankFull[short.toLowerCase()] = full; rankFull[full.toLowerCase()] = full;
+      var fullKey = full.toLowerCase(), shortKey = short.toLowerCase();
+      var photo = (r[17] && r[17].v || '').toString().trim();
+      rankFull[shortKey] = full;
+      rankFull[fullKey] = full;
+      rankShort[fullKey] = short;
+      if (photo) photos[fullKey] = photo;
     });
+    who = rankShort[who.trim().toLowerCase()] || who.trim();
     function photoFor(name) {
       var k = name.toLowerCase();
-      if (photos[k]) return photos[k];
-      var first = k.split(' ')[0];
-      var ph = unambiguous(photos, first); if (ph) return ph;
+      var full = rankFull[k] || name;
+      if (photos[full.toLowerCase()]) return photos[full.toLowerCase()];
       return 'https://ui-avatars.com/api/?background=b6e63e&color=060f24&size=160&format=svg&bold=true&name=' + encodeURIComponent(name);
-    }
-    function unambiguous(map, first) {
-      var hit = null, n = 0;
-      for (var key in map) if (key.split(' ')[0] === first) { n++; hit = map[key]; }
-      return n === 1 ? hit : null;
     }
     function displayName(name) {
       var k = name.toLowerCase();
-      if (rankFull[k]) return rankFull[k];
-      if (fullNames[k]) return fullNames[k];
-      var first = k.split(' ')[0];
-      return unambiguous(rankFull, first) || unambiguous(fullNames, first) || name;
+      return rankFull[k] || name;
     }
 
     // --- parse score rows ---
@@ -98,10 +84,9 @@
     });
     matches.sort(function (a, b) { return a.d - b.d; });
 
-    // locate player rows (exact, else first-name match)
+    // Score-sheet names are player identifiers; first-name matches merge different players.
     function samePlayer(a, b) {
-      a = a.toLowerCase(); b = b.toLowerCase();
-      return a === b || a.split(' ')[0] === b.split(' ')[0];
+      return a.toString().trim().toLowerCase() === b.toString().trim().toLowerCase();
     }
     var mine = matches.filter(function (m) {
       return m.teamA.concat(m.teamB).some(function (n) { return samePlayer(n, who); });

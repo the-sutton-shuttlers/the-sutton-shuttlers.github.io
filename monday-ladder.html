@@ -9,15 +9,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style-8.css">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <header class="site-header">
   <div class="nav-wrap">
     <a class="brand" href="index.html"><img src="assets/img/logo.svg" alt="Sutton Shuttlers logo"><span>Sutton Shuttlers</span></a>
-    <button class="nav-toggle" aria-label="Menu">&#9776;</button>
-    <nav class="nav-links">
+    <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="primary-navigation">&#9776;</button>
+    <nav class="nav-links" id="primary-navigation" aria-label="Primary navigation">
       <a href="monday-ladder.html">Monday Ladder</a>
       <a href="tournaments.html">Tournaments</a>
       <a href="calendar.html">Calendar</a>
@@ -84,7 +84,7 @@
   <p>Members can join the Monday Ladder via the registration form or at any session.</p>
   <a class="btn btn-primary" href="register.html">Join the Ladder</a>
 </section>
-<script src="js/leaderboard-4.js"></script>
+<script src="js/leaderboard.js"></script>
 
 
 <footer class="site-footer">
@@ -123,6 +123,6 @@
   <div class="footer-bottom">&copy; 2024 Sutton Shuttlers Badminton Club. All rights reserved.</div>
 </footer>
 
-<script src="js/main-4.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

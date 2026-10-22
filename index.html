@@ -9,15 +9,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style-8.css">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <header class="site-header">
   <div class="nav-wrap">
     <a class="brand" href="index.html"><img src="assets/img/logo.svg" alt="Sutton Shuttlers logo"><span>Sutton Shuttlers</span></a>
-    <button class="nav-toggle" aria-label="Menu">&#9776;</button>
-    <nav class="nav-links">
+    <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="primary-navigation">&#9776;</button>
+    <nav class="nav-links" id="primary-navigation" aria-label="Primary navigation">
       <a href="monday-ladder.html">Monday Ladder</a>
       <a href="tournaments.html">Tournaments</a>
       <a href="calendar.html">Calendar</a>
@@ -71,6 +71,45 @@
     <div class="card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18L14 6l-3 5-2-3-6 12z"/><path d="M14 6l2.5 4"/></svg></div><h3>Beyond the Court</h3><p>Hiking, walking, running and cricket — we embrace a holistic approach to fitness, well-being and adventure.</p></div>
   </div>
 </div></section>
+
+<section class="section alt schedule-section" id="weekly-schedule">
+  <div class="inner">
+    <div class="kicker">Plan your week</div>
+    <h2>Weekly schedule</h2>
+    <p class="lead">We usually play two to three times a week. Here’s the regular rhythm; session dates, times and venues are confirmed with members each week.</p>
+    <div class="grid grid-3 schedule-grid">
+      <article class="card schedule-card">
+        <span class="schedule-label">Midweek evenings</span>
+        <h3>Social doubles</h3>
+        <p>Friendly open sessions for players who can sustain a rally. A good way to meet the club and get on court.</p>
+      </article>
+      <article class="card schedule-card">
+        <span class="schedule-label">Weekly</span>
+        <h3>League night</h3>
+        <p>Internal fixtures and leaderboard games for members who want some competitive doubles.</p>
+      </article>
+      <article class="card schedule-card">
+        <span class="schedule-label">As scheduled</span>
+        <h3>Weekends &amp; events</h3>
+        <p>Extra sessions, tournaments and social activities are announced when they’re arranged.</p>
+      </article>
+    </div>
+    <p class="schedule-note">Exact upcoming slots aren’t published publicly. <a href="register.html">Register your interest</a> and we’ll share the current schedule, venue and fees before you decide.</p>
+    <a class="btn btn-primary" href="calendar.html">View schedule details</a>
+  </div>
+</section>
+
+<section class="section join-section">
+  <div class="kicker">Your first visit</div>
+  <h2>A friendly, no-surprises start</h2>
+  <p class="lead">Find out what to expect before you commit to joining.</p>
+  <div class="grid grid-3 join-grid">
+    <article class="card"><span class="join-step">01</span><h3>Tell us about yourself</h3><p>Register your interest and let the committee know your playing experience and what you’re looking for.</p></article>
+    <article class="card"><span class="join-step">02</span><h3>Try a session</h3><p>We’ll share the current session details and invite you to a taster so you can meet the club and see if it feels right.</p></article>
+    <article class="card"><span class="join-step">03</span><h3>Play your way</h3><p>Bring a racket and non-marking court shoes. Nets and shuttlecocks are provided; fees are shared before you join.</p></article>
+  </div>
+  <a class="btn btn-primary join-cta" href="register.html">Register your interest</a>
+</section>
 
 <section class="section">
   <div class="kicker">FAQ</div>
@@ -128,6 +167,6 @@
   <div class="footer-bottom">&copy; 2024 Sutton Shuttlers Badminton Club. All rights reserved.</div>
 </footer>
 
-<script src="js/main-4.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>

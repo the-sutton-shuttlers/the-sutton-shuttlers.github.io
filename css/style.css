@@ -41,12 +41,16 @@ a:hover { text-decoration: underline; }
 .nav-links a.cta { background: var(--accent); color: var(--accent-ink); margin-left: 10px; font-weight: 700; }
 .nav-links a.cta:hover { background: #fff; }
 .nav-toggle { display: none; background: none; border: 0; color: #fff; font-size: 26px; cursor: pointer; line-height: 1; }
+.nav-toggle:focus-visible, a:focus-visible, button:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 3px;
+}
 
 /* Hero */
 .hero {
   position: relative; color: #fff; text-align: center;
   padding: 150px 22px 130px; overflow: hidden;
-  background: linear-gradient(180deg, rgba(6,15,36,.55) 0%, rgba(6,15,36,.82) 62%, var(--bg) 100%), url('../img/hero-court.jpg') center 68%/cover no-repeat;
+  background: linear-gradient(180deg, rgba(6,15,36,.55) 0%, rgba(6,15,36,.82) 62%, var(--bg) 100%), url('../assets/img/hero-court.jpg') center 68%/cover no-repeat;
 }
 .hero .tag { display: inline-block; font-size: 12.5px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); border: 1px solid var(--line); border-radius: 999px; padding: 7px 18px; margin-bottom: 22px; background: rgba(6,15,36,.5); }
 .hero h1 { font-family: var(--display); font-size: clamp(40px, 6.5vw, 76px); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; line-height: 1.05; margin-bottom: 20px; text-shadow: 0 4px 30px rgba(0,0,0,.6); }
@@ -188,7 +192,7 @@ td .pill { background: rgba(56,198,244,.12); color: var(--teal); font-size: 12px
 .shuttle-float svg { width: 220px; height: 220px; stroke: #fff; }
 
 @media (max-width: 880px) {
-  .nav-links { position: fixed; inset: 66px 0 auto 0; background: #060f24; flex-direction: column; padding: 18px; display: none; align-items: stretch; border-bottom: 2px solid var(--line); }
+  .nav-links { position: absolute; top: 100%; left: 0; right: 0; max-height: calc(100vh - 70px); overflow-y: auto; background: #060f24; flex-direction: column; padding: 18px; display: none; align-items: stretch; border-bottom: 2px solid var(--line); }
   .nav-links.open { display: flex; }
   .nav-links a { padding: 14px; }
   .nav-links a.cta { margin: 8px 0 0; text-align: center; }
@@ -199,6 +203,22 @@ td .pill { background: rgba(56,198,244,.12); color: var(--teal); font-size: 12px
   .hero { padding: 110px 22px 100px; }
 }
 @media (max-width: 520px) { .footer-grid { grid-template-columns: 1fr; } }
+
+/* Homepage schedule and joining information */
+.schedule-section { max-width: none; }
+.schedule-section > .inner { max-width: 1180px; margin: 0 auto; }
+.schedule-grid, .join-grid { margin-top: 26px; }
+.schedule-card h3, .join-grid h3 { margin: 12px 0 8px; }
+.schedule-card p, .join-grid p { color: var(--ink-soft); font-size: 15px; }
+.schedule-label { color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
+.schedule-note { color: var(--ink-soft); margin: 24px 0 18px; }
+.schedule-note a { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.join-step { color: var(--accent); font-family: var(--display); font-size: 28px; font-weight: 700; }
+.join-cta { margin-top: 24px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
 
 /* --- Events dropdown (desktop) --- */
 .nav-item { position: relative; display: inline-flex; }
