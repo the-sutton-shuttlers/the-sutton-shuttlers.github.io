@@ -75,11 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Party form validation runs here, before any network call — a separate
       // submit listener can't stop this handler once it has started.
       if (form.dataset.gform) {
-        if (localStorage.getItem('party2026-submitted')) {
-          status.className = 'form-status ok';
-          status.textContent = 'Looks like you already registered from this device. Need to change your booking? Message the committee via the contact form.';
-          return;
-        }
         const labels = { adults: 'Adults', kids: 'Children 5-11', u5: 'Children under 5' };
         let bad = null, total = 0;
         Object.keys(labels).forEach(g => {
@@ -128,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
         status.className = 'form-status ok';
         status.textContent = form.dataset.success || 'Thank you! We will be in touch shortly.';
         form.reset();
-        if (form.dataset.gform) localStorage.setItem('party2026-submitted', '1');
         form.querySelectorAll('[data-total]').forEach(t => t.textContent = '1');
         form.querySelectorAll('[data-total-veg]').forEach(t => t.textContent = '0');
       } catch {
@@ -138,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
           status.className = 'form-status ok';
           status.textContent = 'Thanks — you are registered! (Our confirmation email is being slow, so you may not get one — but your booking is recorded.)';
           form.reset();
-          localStorage.setItem('party2026-submitted', '1');
           form.querySelectorAll('[data-total]').forEach(t => t.textContent = '1');
           form.querySelectorAll('[data-total-veg]').forEach(t => t.textContent = '0');
         } else {
@@ -150,15 +143,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Party form: live totals + veg-can't-exceed-group check + same-device duplicate guard
+  // Party form: live totals + veg-can't-exceed-group check
   const party = document.querySelector('form[data-gform]');
   if (party) {
-    const submittedKey = 'party2026-submitted';
-    if (localStorage.getItem(submittedKey)) {
-      const status = party.querySelector('.form-status');
-      status.className = 'form-status ok';
-      status.textContent = 'Looks like you already registered from this device. Need to change your booking? Message the committee via the contact form.';
-    }
     const groups = [['adults','adults-veg'],['kids','kids-veg'],['u5','u5-veg']];
     const recalc = () => {
       let total = 0, veg = 0;
